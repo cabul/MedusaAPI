@@ -1,10 +1,10 @@
-'use strict'
+'use strict';
 
 var client = require('../../app/controllers/client');
 
 module.exports = function(app) {
 	app.route('/cuac').get(function(req, res){
-		console.log("\ncuac\n");
+		console.log('\ncuac\n');
 	});
 	app.route('/requestTicket/:phoneId').get(client.requestTicket);
 	app.route('/requestMatch/:ticketId').get(client.requestMatch);
