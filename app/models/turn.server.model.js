@@ -17,5 +17,4 @@ var turnSchema = new Schema({
 	}
 });
 
-
  mongoose.model('Turn', turnSchema);

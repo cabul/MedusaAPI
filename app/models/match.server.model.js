@@ -47,13 +47,14 @@ matchSchema.methods.createMatch = function (userA, userB, match) {
 	});
 	newMatch.save(function(err){
 		if(err)
+			console.log('Could not create new match');
 			return handleError(err);
 	});
 	return newMatch._id;
 };
 
 matchSchema.methods.getTurns = function(id, turns){
-	var query = this.model('Match').findById(id).only('turns', function (err){
+	var query = this.model('Match').findById(id, 'turns', function (err){
 		if(err)
 			console.log('Could not get turns of match with id: s%', id);
 			return handleError(err);
@@ -62,18 +63,5 @@ matchSchema.methods.getTurns = function(id, turns){
 	return query.exec(turns);
 };
 
-/*matchSchema.methods.matchStatus = function (result) {
-	var query = this.model('Match')
-		.find({_id: this.id});
-   	query.only('status');
-    return query.exec(result);
-};
-
-
-
-matchSchema.methods.findNewMatch = function (id, result){
-	var query = this.model('Match').findOne({ userB: id, status: 'not started' });
-	return query.exec(result);
-};*/
 
 mongoose.model('Match', matchSchema);
