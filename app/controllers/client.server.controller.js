@@ -36,9 +36,6 @@ exports.getMatchStatus = function(req, res){
 
 };
 exports.setMatchStatus = function(req, res){
-	var matchId = req.params.matchId;
-	var ticketId = req.params.ticketId;
-	var statusInfo = req.params.statusInfo;	
 	var params = {	"matchId" : req.param('matchId'),
 					"ticketId": req.param('ticketId'),
 					"statusInfo": req.param('statusInfo')

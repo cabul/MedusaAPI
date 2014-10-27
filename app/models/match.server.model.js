@@ -3,31 +3,32 @@
 /**
  * Module dependencies.
  */
+var handleError = require ('../controllers/errors');
 var mongoose = require('mongoose'),
 	 Schema = mongoose.Schema;
 
 var matchSchema = new Schema({
-	userA: {
+	Ticket_userA: {
 		type: String,
 		required: true,
-		unique: false
+		unique: true
 	},
-	userB: {
+	ticket_userB: {
 		type: String,
 		required: true,
-		unique: false
+		unique: true
 	},
 	init_date: {
 		type: Date,
 		required: true,
  		unique: false
 	},
-	turnCount: {
-		type: String,
+	Last_Turn: {
+		type: Number,
 		required: true,
 		unique: false
 	},
-	states: [], 
+	turns: [], 
 	status: {
 		type: String,
 		required: true,
@@ -35,11 +36,31 @@ var matchSchema = new Schema({
 	}
 });
 
-matchSchema.methods.matchStatus = function () {
-	var query = this.model('Match')
-		.find({_id: this.id});
-   
-    return query.only('status');
+matchSchema.methods.createMatch = function (userA, userB, match) {
+	var newMatch = new this.model('Match') ({
+		Ticket_userA: userA,
+		Ticket_userB: userB,
+		init_date: new Date(),
+		Last_Turn: 0,
+		turns: [], 
+		status: 'not started'
+	});
+	newMatch.save(function(err){
+		if(err)
+			console.log('Could not create new match');
+			return handleError(err);
+	});
+	return newMatch._id;
+};
+
+matchSchema.methods.getTurns = function(id, turns){
+	var query = this.model('Match').findById(id, 'turns', function (err){
+		if(err)
+			console.log('Could not get turns of match with id: s%', id);
+			return handleError(err);
+	});
+	
+	return query.exec(turns);
 };
 
 

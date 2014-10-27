@@ -141,6 +141,7 @@ module.exports = function(grunt) {
 
 	// Load NPM tasks
 	require('load-grunt-tasks')(grunt);
+	grunt.loadNpmTasks('grunt-ng-annotate');
 
 	// Making grunt default to force in order not to break the project.
 	grunt.option('force', true);
@@ -153,7 +154,7 @@ module.exports = function(grunt) {
 		grunt.config.set('applicationJavaScriptFiles', config.assets.js);
 		grunt.config.set('applicationCSSFiles', config.assets.css);
 	});
-
+	grunt.loadNpmTasks('grunt-ng-annotate');
 	// Default task(s).
 	grunt.registerTask('default', ['lint', 'concurrent:default']);
 
