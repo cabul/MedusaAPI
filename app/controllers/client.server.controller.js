@@ -3,38 +3,42 @@
 var mongoose = require('mongoose');
 
 exports.requestTicket = function(req, res){
-	var phoneId = req.params.phoneId;
-	return res.status(400).send(req.params);
+	var params = {"phoneId" : req.param('phoneId')};
+	return res.status(400).send(params);
 };
 exports.requestMatch = function(req, res){
-	var ticketId = req.params.ticketId;
-	return res.status(400).send(req.params);
+	var params = {"ticketId" : req.param('ticketId')};
+	return res.status(400).send(params);
 };
 exports.waitTurn = function(req, res){
-	var matchId = req.params.matchId;
-	var ticketId = req.params.ticketId;
-	var turnId = req.params.turnId;
-	return res.status(400).send(req.params);
+	var params = {	"matchId" : req.param('matchId'),
+					"ticketId": req.param('ticketId'),
+					"turnId": req.param('turnId')
+				};
+	return res.status(400).send(params);
 
 };
 exports.submitTurn = function(req, res){
-	var matchId = req.params.matchId;
-	var ticketId = req.params.ticketId;
-	var turnId = req.params.turnId;
-	var turnInfo = req.params.turnInfo;
-	return res.status(400).send(req.params);
+	var params = {	"matchId": req.param('matchId'),
+					"ticketId": req.param('ticketId'),
+					"turnId": req.param('turnId'),
+					"turnInfo": req.param('turnInfo')
+	};
+	return res.status(400).send(params);
 
 };
 exports.getMatchStatus = function(req, res){
-	var matchId = req.params.matchId;
-	var ticketId = req.params.ticketId;
-	return res.status(400).send(req.params);
+	var params = {	"matchId" : req.param('matchId'),
+				"ticketId": req.param('ticketId')
+			};
+	return res.status(400).send(params);
 
 
 };
 exports.setMatchStatus = function(req, res){
-	var matchId = req.params.matchId;
-	var ticketId = req.params.ticketId;
-	var statusInfo = req.params.statusInfo;
-	return res.status(400).send(req.params);
+	var params = {	"matchId" : req.param('matchId'),
+					"ticketId": req.param('ticketId'),
+					"statusInfo": req.param('statusInfo')
+				};
+	return res.status(400).send(params);
 };
