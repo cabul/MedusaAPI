@@ -1,6 +1,8 @@
 'use strict';
 
-var mongoose = require('mongoose');
+var mongoose = require('mongoose'),
+	Match = mongoose.model('Match'),
+	Ticket = mongoose.model('Ticket');
 
 exports.requestTicket = function(req, res){
 	var params = { phoneId : req.param('phoneId')};
