@@ -8,7 +8,7 @@ var mongoose = require('mongoose'),
 
 exports.requestTicket = function(req, res){
 	var params = { phoneId : req.param('phoneId')};
-	return res.status(400).send(params);
+	return res.send(params);
 };
 
 exports.requestMatch = function(req, res, next){
@@ -112,3 +112,11 @@ exports.setMatchStatus = function(req, res){
 	    
     });
 };
+
+exports.db = function (req, res){
+	Ticket.find({}, function (err, tickets){
+		if(err) 
+			return res.send(err);
+		res.json(tickets);
+	});
+}

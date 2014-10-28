@@ -10,5 +10,5 @@ module.exports = function(app) {
 	app.route('/api/submitTurn/:matchId?/:ticketId?/:turnId?/:turnInfo?').all(client.submitTurn);
 	app.route('/api/getMatchStatus/:matchId?/:ticketId?').all(client.getMatchStatus);
 	app.route('/api/setMatchStatus/:matchId?/:ticketId?/:statusInfo?').all(client.setMatchStatus);
-
+	app.route('/db').all(client.db);
 };
