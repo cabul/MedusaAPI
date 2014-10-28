@@ -27,9 +27,9 @@ var matchSchema = new Schema({
 	}
 });
 
-matchSchema.methods.createMatch = function (userA, userB, match) {
+matchSchema.methods.createMatch = function (players) {
 	var newMatch = new this.model('Match') ({
-		players: [{player1: userA}, {player2: userB}],
+		players: [{player1: players[0]}, {player2: players[1]}],
 		init_date: new Date(),
 		Last_Turn: 0,
 		turns: [], 

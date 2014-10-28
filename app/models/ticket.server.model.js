@@ -8,14 +8,10 @@ var mongoose = require('mongoose'),
     Schema = mongoose.Schema;
 
 var ticketSchema = new Schema({
-	info: {
-		type: String,
-		required: false,
-		unique: false
-	}
+	info: []
 });
 
-ticketSchema.methods.createTicket = function (ticket){
+ticketSchema.methods.createTicket = function (){
 	var newTicket = new this.model('Ticket') ({
 		info: 'Ticket created' 
 	});

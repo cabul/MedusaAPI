@@ -9,5 +9,5 @@ module.exports = function(app) {
 	app.route('/submitTurn/:matchId?/:ticketId?/:turnId?/:turnInfo?').get(client.submitTurn);
 	app.route('/getMatchStatus/:matchId?/:ticketId?').get(client.getMatchStatus);
 	app.route('/setMatchStatus/:matchId?/:ticketId?/:statusInfo?').get(client.setMatchStatus);
-}
+};
 
