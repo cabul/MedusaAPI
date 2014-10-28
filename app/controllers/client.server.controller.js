@@ -1,12 +1,20 @@
 'use strict';
 
-var mongoose = require('mongoose');
+var mongoose = require('mongoose'),
+Ticket = mongoose.model('Ticket'),
+Turn = mongoose.model('Turn'),
+Match = mongoose.model('Match');
 
 exports.requestTicket = function(req, res){
 	var params = {
 		"phoneId" : req.param('phoneId')
 	};
-	return res.status(400).send(params);
+	var newTicket = new Ticket({
+		match_id: "hola",
+		info: "info"
+	});
+	console.log(req.json_body);
+	return res.send(JSON.stringify(req.body));
 };
 
 exports.requestMatch = function(req, res){
