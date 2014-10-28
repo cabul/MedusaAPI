@@ -8,16 +8,12 @@ var mongoose = require('mongoose'),
 	 Schema = mongoose.Schema;
 
 var matchSchema = new Schema({
-	Ticket_userA: {
-		type: String,
+	players: {
+		type: Array,
 		required: true,
 		unique: true
 	},
-	ticket_userB: {
-		type: String,
-		required: true,
-		unique: true
-	},
+	match_info: [],
 	init_date: {
 		type: Date,
 		required: true,
@@ -36,22 +32,6 @@ var matchSchema = new Schema({
 	}
 });
 
-matchSchema.methods.createMatch = function (userA, userB, match) {
-	var newMatch = new this.model('Match') ({
-		Ticket_userA: userA,
-		Ticket_userB: userB,
-		init_date: new Date(),
-		Last_Turn: 0,
-		turns: [], 
-		status: 'not started'
-	});
-	newMatch.save(function(err){
-		if(err)
-			console.log('Could not create new match');
-			return handleError(err);
-	});
-	return newMatch._id;
-};
 
 matchSchema.methods.getTurns = function(id, turns){
 	var query = this.model('Match').findById(id, 'turns', function (err){
@@ -63,5 +43,17 @@ matchSchema.methods.getTurns = function(id, turns){
 	return query.exec(turns);
 };
 
+matchSchema.methods.removeMatch = function (matchId){
+	this.model('Match').findByIdAndRemove({ _id: matchId }, function(err) {
+    if (!err) {
+           return ('Match with id = %s has been removed ', matchId);
+    }
+    else {
+           console.log('Could not remove match with id = %s', matchId) ;
+           return handleError(err);
+    }
+});
+	
+};
 
 mongoose.model('Match', matchSchema);
