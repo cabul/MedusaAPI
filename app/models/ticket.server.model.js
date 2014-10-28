@@ -8,11 +8,6 @@ var mongoose = require('mongoose'),
     Schema = mongoose.Schema;
 
 var ticketSchema = new Schema({
-	match_id: {
-		type: String,
-		require: false,
-		unique: true
-	},
 	info: {
 		type: String,
 		required: false,
@@ -22,26 +17,30 @@ var ticketSchema = new Schema({
 
 ticketSchema.methods.createTicket = function (ticket){
 	var newTicket = new this.model('Ticket') ({
-		match_id: null,
 		info: 'Ticket created' 
 	});
 	newTicket.save(function(err){
 		if(err)
+			console.log('Could not save new ticket');
 			return handleError(err);
 	});
+	console.log('New ticket created');
 	return newTicket._id;
 };
 
 
-ticketSchema.methods.isTicketFromMatch = function (ticket, match) {
-	this.model('Ticket')
-		.findById( { _id: ticket }, 'matchid')
-		.exec(function (err, matchid){
-		 if(err)
-			return handleError(err);
-		 return (match === matchid)?true:false;
-	});
-
+ticketSchema.methods.removeTicket = function (ticketid){
+	this.model('Ticket').findByIdAndRemove({ _id: ticketid }, function(err) {
+    if (!err) {
+           return ('Ticket removed %s', ticketid);
+    }
+    else {
+           console.log('Could not remove ticket by id %s', ticketid) ;
+           return handleError(err);
+    }
+});
+	
 };
+
 
  mongoose.model('Ticket', ticketSchema);

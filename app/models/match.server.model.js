@@ -8,16 +8,7 @@ var mongoose = require('mongoose'),
 	 Schema = mongoose.Schema;
 
 var matchSchema = new Schema({
-	Ticket_userA: {
-		type: String,
-		required: true,
-		unique: true
-	},
-	ticket_userB: {
-		type: String,
-		required: true,
-		unique: true
-	},
+	players: [],
 	init_date: {
 		type: Date,
 		required: true,
@@ -38,8 +29,7 @@ var matchSchema = new Schema({
 
 matchSchema.methods.createMatch = function (userA, userB, match) {
 	var newMatch = new this.model('Match') ({
-		Ticket_userA: userA,
-		Ticket_userB: userB,
+		players: [{player1: userA}, {player2: userB}],
 		init_date: new Date(),
 		Last_Turn: 0,
 		turns: [], 
