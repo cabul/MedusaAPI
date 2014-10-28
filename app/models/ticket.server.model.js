@@ -11,27 +11,14 @@ var ticketSchema = new Schema({
 	info: []
 });
 
-ticketSchema.methods.createTicket = function (){
-	var newTicket = new this.model('Ticket') ({
-		info: 'Ticket created' 
-	});
-	newTicket.save(function(err){
-		if(err)
-			console.log('Could not save new ticket');
-			return handleError(err);
-	});
-	console.log('New ticket created');
-	return newTicket._id;
-};
 
-
-ticketSchema.methods.removeTicket = function (ticketid){
-	this.model('Ticket').findByIdAndRemove({ _id: ticketid }, function(err) {
+ticketSchema.methods.removeTicket = function (ticketId){
+	this.model('Ticket').findByIdAndRemove({ _id: ticketId }, function(err) {
     if (!err) {
-           return ('Ticket removed %s', ticketid);
+           return ('Ticket removed %s', ticketId);
     }
     else {
-           console.log('Could not remove ticket by id %s', ticketid) ;
+           console.log('Could not remove ticket by id %s', ticketId) ;
            return handleError(err);
     }
 });
