@@ -74,19 +74,15 @@ exports.waitTurn = function(req, res, next){
 
 exports.submitTurn = function(req, res){
 	var params = {	
-		"matchId": req.param('matchId'),
-		"ticketId": req.param('ticketId'),
-		"turnId": req.param('turnId'),
-		"turnInfo": req.param('turnInfo')
+		matchId: req.param('matchId'),
+		ticketId: req.param('ticketId'),
+		turnId: req.param('turnId'),
+		turnInfo: req.param('turnInfo')
 	};
 	return res.status(400).send(params);
 };
 
 exports.getMatchStatus = function(req, res){
-	var params = {	
-		"matchId" : req.param('matchId'),
-		"ticketId": req.param('ticketId')
-	};
 	var matchId = req.body.matchId;
 	Match.findById(matchId, 'status' ,function(err, match_status){
 		if(err)
@@ -96,7 +92,6 @@ exports.getMatchStatus = function(req, res){
 
 		res.send(match_status);
 	});
-	return res.status(400).send(params);
 };
 
 
@@ -133,4 +128,4 @@ exports.db = function (req, res){
 			return res.send(err);
 		res.json(tickets);
 	});
-}
+};
