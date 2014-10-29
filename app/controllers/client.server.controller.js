@@ -21,25 +21,36 @@ exports.requestTicket = function(req, res){
 };
 
 exports.requestMatch = function(req, res, next){
-	var params = { ticketId: req.body.ticketId };
-	Ticket.findOne({}, function (err, oponent){
-		console.log(oponent);
+	var ticket = new Ticket(req.body);
+	//req.body._id = ticketId
+	Match.findOne({ 'players[0].ticket': req.body._id ,status: 'not started'}, 'players', function(err, match){
 		if(err)
 			return res.status(400).send({
-							message: 'Could not processed requet for ticket with id : '+ params.ticketId
+							message: 'Error ocurred while looking for a match '
 						});
-		if (oponent) {
-			var players = [params.ticketId, oponent._id];
-			var newMatch = new Match({
-				players: [{player1: players[0]}, {player2: players[1]}],
-				match_info: [{player1: players[0]}, {player2: players[1]}],
-				init_date: new Date(),
-				Last_Turn: 0,
-				turns: [], 
-				status: 'not started'
-	   		});
+		if(match){
+			req.body.ticket.removeTicket(req.body._id);
+			return res.send({matchId: match._id, players: match.players, player: 0}); //player: 0 = first player
+		}else{
+			Ticket.findOne({}, function (err, oponent){
+			console.log(oponent);
+			if(err)
+				return res.status(400).send({
+							message: 'Could not processed requet for ticket with id : '+ req.body._id
+						});
+			if (oponent) {
+				var players = [oponent._id, req.body._id];
+				var newMatch = new Match({
+									players: [{player1: { name: req.body.info[0], ticket: players[0]}},
+						 		   			{player2: { name: oponent.name, ticket: players[1]}}],
+								   	match_info: [{player1: players[0]}, {player2: players[1]}],
+									init_date: new Date(),
+									Last_Turn: 0,
+									turns: [], 
+									status: 'not started'
+	   							});
 	    
-	    	newMatch.save(function(err){
+	    		newMatch.save(function(err){
 				if(err){
 					console.log('Could not create new match');
 					return res.status(400).send({
@@ -47,42 +58,44 @@ exports.requestMatch = function(req, res, next){
 						});
 				}
 				
-	  	    });
-    	
-        res.send(newMatch._id);
+	  	    	});
+    			req.body.ticket.removeTicket(req.body._id);
+        		return res.send({matchId: newMatch._id, players: newMatch.players, player: 1}); //player: 1 = second player
       	
-    }else{
-    	console.log('Could not find adversary');
-      	res.send('Could not find adversary. Please wait for an oponent...');
-	}
+    		}else{
+    			console.log('Could not find adversary');
+      			res.send('Could not find adversary. Please wait for an oponent...');
+			}
+			
+		    });
+		}
 			
 	});
+	
 };
 
-exports.waitTurn = function(req, res){
+exports.waitTurn = function(req, res, next){
 	var params = {	matchId : req.param('matchId'),
 					ticketId: req.param('ticketId'),
 					turnId: req.param('turnId')
 				};
+
 	return res.status(400).send(params);
 };
 
 exports.submitTurn = function(req, res){
 	var params = {	
-		"matchId": req.param('matchId'),
-		"ticketId": req.param('ticketId'),
-		"turnId": req.param('turnId'),
-		"turnInfo": req.param('turnInfo')
+		matchId: req.param('matchId'),
+		ticketId: req.param('ticketId'),
+		turnId: req.param('turnId'),
+		turnInfo: req.param('turnInfo')
 	};
 	return res.status(400).send(params);
 };
 
 exports.getMatchStatus = function(req, res){
-	var params = {	
-		"matchId" : req.param('matchId'),
-		"ticketId": req.param('ticketId')
-	};
-	var matchId = req.body.matchId;
+	var match = new Match(req.body);
+	var matchId = match._id;
 	Match.findById(matchId, 'status' ,function(err, match_status){
 		if(err)
 			return res.status(400).send({
@@ -91,16 +104,16 @@ exports.getMatchStatus = function(req, res){
 
 		res.send(match_status);
 	});
-	return res.status(400).send(params);
 };
 
 
 exports.setMatchStatus = function(req, res){
-	var matchId = req.body.matchId;
+	var match = new Match(req.body);
+	var matchId = match._id;
 	Match.findById(matchId, function (err, match) {
     	if (err) 
     		return res.status(400).send({
-							message: 'Error ocurred while finding match to update'
+							message: 'Error ocurred while looking for match to update'
 			});
 
     	if(match){
@@ -128,4 +141,4 @@ exports.db = function (req, res){
 			return res.send(err);
 		res.json(tickets);
 	});
-}
+};

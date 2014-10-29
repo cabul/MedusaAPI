@@ -13,7 +13,10 @@ var matchSchema = new Schema({
 		required: true,
 		unique: true
 	},
-	match_info: [],
+	match_info: {type: Array,
+			required: false,
+			unique: false,
+	},
 	init_date: {
 		type: Date,
 		required: true,
@@ -24,7 +27,10 @@ var matchSchema = new Schema({
 		required: true,
 		unique: false
 	},
-	turns: [], 
+	turns: {type: Array,
+			required: true,
+			unique: false,
+	}, 
 	status: {
 		type: String,
 		required: true,
