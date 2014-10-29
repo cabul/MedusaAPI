@@ -12,25 +12,27 @@ exports.requestTicket = function(req, res){
 };
 
 exports.requestMatch = function(req, res, next){
-	Match.findOne({ 'players[0].ticket': req.body.ticketId ,status: 'not started'}, 'players', function(err, match){
+	var ticket = new Ticket(req.body);
+	//req.body._id = ticketId
+	Match.findOne({ 'players[0].ticket': req.body._id ,status: 'not started'}, 'players', function(err, match){
 		if(err)
 			return res.status(400).send({
-							message: 'Error ocurred while looking for match '
+							message: 'Error ocurred while looking for a match '
 						});
 		if(match){
-			req.body.ticket.removeTicket(req.body.ticketId);
-			return res.send({matchId: match._id, players: match.players});
+			req.body.ticket.removeTicket(req.body._id);
+			return res.send({matchId: match._id, players: match.players, player: 0}); //player: 0 = first player
 		}else{
 			Ticket.findOne({}, function (err, oponent){
 			console.log(oponent);
 			if(err)
 				return res.status(400).send({
-							message: 'Could not processed requet for ticket with id : '+ req.body.ticketId
+							message: 'Could not processed requet for ticket with id : '+ req.body._id
 						});
 			if (oponent) {
-				var players = [req.body.ticketId, oponent._id];
+				var players = [oponent._id, req.body._id];
 				var newMatch = new Match({
-									players: [{player1: { name: req.body.name, ticket: players[0]}},
+									players: [{player1: { name: req.body.info[0], ticket: players[0]}},
 						 		   			{player2: { name: oponent.name, ticket: players[1]}}],
 								   	match_info: [{player1: players[0]}, {player2: players[1]}],
 									init_date: new Date(),
@@ -48,8 +50,8 @@ exports.requestMatch = function(req, res, next){
 				}
 				
 	  	    	});
-    			req.body.ticket.removeTicket(req.body.ticketId);
-        		return res.send({matchId: newMatch._id, players: newMatch.players});
+    			req.body.ticket.removeTicket(req.body._id);
+        		return res.send({matchId: newMatch._id, players: newMatch.players, player: 1}); //player: 1 = second player
       	
     		}else{
     			console.log('Could not find adversary');
@@ -83,7 +85,8 @@ exports.submitTurn = function(req, res){
 };
 
 exports.getMatchStatus = function(req, res){
-	var matchId = req.body.matchId;
+	var match = new Match(req.body);
+	var matchId = match._id;
 	Match.findById(matchId, 'status' ,function(err, match_status){
 		if(err)
 			return res.status(400).send({
@@ -96,7 +99,8 @@ exports.getMatchStatus = function(req, res){
 
 
 exports.setMatchStatus = function(req, res){
-	var matchId = req.body.matchId;
+	var match = new Match(req.body);
+	var matchId = match._id;
 	Match.findById(matchId, function (err, match) {
     	if (err) 
     		return res.status(400).send({
