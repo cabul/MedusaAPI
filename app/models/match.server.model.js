@@ -13,7 +13,10 @@ var matchSchema = new Schema({
 		required: true,
 		unique: true
 	},
-	match_info: [],
+	match_info: {type: Array,
+			required: false,
+			unique: false,
+	},
 	init_date: {
 		type: Date,
 		required: true,
@@ -24,7 +27,10 @@ var matchSchema = new Schema({
 		required: true,
 		unique: false
 	},
-	turns: [], 
+	turns: {type: Array,
+			required: true,
+			unique: false,
+	}, 
 	status: {
 		type: String,
 		required: true,
@@ -43,7 +49,7 @@ matchSchema.methods.getTurns = function(id, turns){
 	return query.exec(turns);
 };
 
-ticketSchema.methods.removeMatch = function (matchId){
+matchSchema.methods.removeMatch = function (matchId){
 	this.model('Match').findByIdAndRemove({ _id: matchId }, function(err) {
     if (!err) {
            return ('Match with id = %s has been removed ', matchId);
