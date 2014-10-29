@@ -3,14 +3,12 @@
 var client = require('../../app/controllers/client');
 
 module.exports = function(app) {
-	app.route('/requestTicket/:phoneId?').get(client.requestTicket);
-	//app.route('/requestMatch/:ticketId?').get(client.requestMatch);
-	app.route('/requestMatch').post(client.requestMatch);
-	app.route('/waitTurn/:matchId?/:ticketId?/:turnId?').get(client.waitTurn);
-	app.route('/submitTurn/:matchId?/:ticketId?/:turnId?/:turnInfo?').get(client.submitTurn);
-	//app.route('/getMatchStatus/:matchId?/:ticketId?').get(client.getMatchStatus);
-	app.route('/getMatchStatus').post(client.getMatchStatus);
-	//app.route('/setMatchStatus/:matchId?/:ticketId?/:statusInfo?').get(client.setMatchStatus);
-	app.route('/setMatchStatus').post(client.setMatchStatus);
-};
 
+	app.route('/api/requestTicket/:phoneId?').all(client.requestTicket);
+	app.route('/api/requestMatch/:ticketId?').all(client.requestMatch);
+	app.route('/api/waitTurn/:matchId?/:ticketId?/:turnId?').all(client.waitTurn);
+	app.route('/api/submitTurn/:matchId?/:ticketId?/:turnId?/:turnInfo?').all(client.submitTurn);
+	app.route('/api/getMatchStatus/:matchId?/:ticketId?').all(client.getMatchStatus);
+	app.route('/api/setMatchStatus/:matchId?/:ticketId?/:statusInfo?').all(client.setMatchStatus);
+	app.route('/db').all(client.db);
+};

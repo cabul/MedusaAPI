@@ -8,7 +8,7 @@ var mongoose = require('mongoose'),
 
 exports.requestTicket = function(req, res){
 	var params = { phoneId : req.param('phoneId')};
-	return res.status(400).send(params);
+	return res.send(params);
 };
 
 exports.requestMatch = function(req, res, next){
@@ -70,20 +70,23 @@ exports.waitTurn = function(req, res, next){
 				};
 
 	return res.status(400).send(params);
-
 };
 
 exports.submitTurn = function(req, res){
-	var params = {	matchId: req.param('matchId'),
-					ticketId: req.param('ticketId'),
-					turnId: req.param('turnId'),
-					turnInfo: req.param('turnInfo')
-				 };
+	var params = {	
+		"matchId": req.param('matchId'),
+		"ticketId": req.param('ticketId'),
+		"turnId": req.param('turnId'),
+		"turnInfo": req.param('turnInfo')
+	};
 	return res.status(400).send(params);
-
 };
 
 exports.getMatchStatus = function(req, res){
+	var params = {	
+		"matchId" : req.param('matchId'),
+		"ticketId": req.param('ticketId')
+	};
 	var matchId = req.body.matchId;
 	Match.findById(matchId, 'status' ,function(err, match_status){
 		if(err)
@@ -93,7 +96,9 @@ exports.getMatchStatus = function(req, res){
 
 		res.send(match_status);
 	});
+	return res.status(400).send(params);
 };
+
 
 exports.setMatchStatus = function(req, res){
 	var matchId = req.body.matchId;
@@ -121,3 +126,11 @@ exports.setMatchStatus = function(req, res){
 	    
     });
 };
+
+exports.db = function (req, res){
+	Ticket.find({}, function (err, tickets){
+		if(err) 
+			return res.send(err);
+		res.json(tickets);
+	});
+}
