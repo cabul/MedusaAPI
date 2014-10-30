@@ -92,12 +92,33 @@ exports.requestMatch = function(req, res, next){
 
 
 exports.waitTurn = function(req, res, next){
-	var params = {	matchId : req.param('matchId'),
+	var matchId = req.body.matchId;
+	var nextTurn = req.body.nextTurn;
+	Match.findById(matchId, function(err, match){
+		if(err)
+			return res.status(400).send({
+										message: 'Error ocurred while creating match'
+								});
+		if(match){
+			//var turns = match.getTurns(matchId);
+			if(match.last_turn === nextTurn - 1){
+				return res.send({matchId: matchId, players: req.body.players, player: 0, nextTurn: nextTurn}); 
+				//player:0--> Le toca el turno
+			}else{
+				return res.send({matchId: matchId, players: req.body.players, player: 1, nextTurn: nextTurn}); 
+				//player:1--> Sigue en espera 
+			}
+			
+		}else{
+			return res.send('ERROR: There is no match with id = '+matchId);
+		}
+	});
+	/*var params = {	matchId : req.param('matchId'),
 					ticketId: req.param('ticketId'),
 					turnId: req.param('turnId')
 				};
 
-	return res.status(400).send(params);
+	return res.status(400).send(params);*/
 };
 
 exports.submitTurn = function(req, res){

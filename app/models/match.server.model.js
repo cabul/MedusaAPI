@@ -22,14 +22,15 @@ var matchSchema = new Schema({
 		required: true,
  		unique: false
 	},
-	Last_Turn: {
+	last_turn: {
 		type: Number,
 		required: true,
 		unique: false
 	},
-	turns: {type: Array,
-			required: true,
-			unique: false,
+	turns: {
+		type: Array,
+		required: true,
+		unique: false,
 	}, 
 	status: {
 		type: String,
@@ -39,23 +40,23 @@ var matchSchema = new Schema({
 });
 
 
-matchSchema.methods.getTurns = function(id, turns){
-	var query = this.model('Match').findById(id, 'turns', function (err){
+matchSchema.methods.getTurns = function(turns){
+	var query = this.model('Match').findById(this.id, 'turns', function (err){
 		if(err)
-			console.log('Could not get turns of match with id: s%', id);
+			console.log('Could not get turns of match with id: s%', this.id);
 			return handleError(err);
 	});
 	
 	return query.exec(turns);
 };
 
-matchSchema.methods.removeMatch = function (matchId){
-	this.model('Match').findByIdAndRemove({ _id: matchId }, function(err) {
+matchSchema.methods.removeMatch = function (){
+	this.model('Match').findByIdAndRemove(this.id, {}, function(err) {
     if (!err) {
-           return ('Match with id = %s has been removed ', matchId);
+           return ('Match with id = %s has been removed ', this.id);
     }
     else {
-           console.log('Could not remove match with id = %s', matchId) ;
+           console.log('Could not remove match with id = %s', this.id) ;
            return handleError(err);
     }
 });
