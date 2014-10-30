@@ -16,7 +16,7 @@ exports.requestTicket = function(req, res){
 							message: "Error ocurred while creating ticket: \n" + err + "\n" + newTicket
 						});
 				}
-				return res.send(newTicket);
+				return res.send(newTicket._id);
 	  	    });	
 };
 
@@ -33,7 +33,7 @@ function removeTicket (ticketId){
 }
 exports.requestMatch = function(req, res, next){
 	//var ticket = new Ticket();
-	var ticketId = req.body.id;
+	var ticketId = req.body.ticketId;
 	Match.findOne({ 'players[0].ticket': ticketId ,status: 'not started'}, 'players', function(err, match){
 		if(err)
 			return res.status(400).send({
