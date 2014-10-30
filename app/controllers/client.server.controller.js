@@ -7,8 +7,17 @@ var mongoose = require('mongoose'),
 	async = require('async');
 
 exports.requestTicket = function(req, res){
-	var params = { phoneId : req.param('phoneId')};
-	return res.send(params);
+	var params = { info : req.param('info')?req.param('info'):req.body.info};
+	var newTicket = new Ticket(req.body); 
+	newTicket.save(function(err){
+				if(err){
+					console.log('Could not create new ticket');
+					return res.status(400).send({
+							message: "Error ocurred while creating ticket: \n" + err + "\n" + newTicket
+						});
+				}
+				return res.send(newTicket);
+	  	    });	
 };
 
 function removeTicket (ticketId){
