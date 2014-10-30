@@ -8,11 +8,6 @@ var mongoose = require('mongoose'),
     Schema = mongoose.Schema;
 
 var ticketSchema = new Schema({
-  match: {
-      type: String,
-      required: false,
-      unique: true
-  },
 	info: {
       type: Array,
       required: false,
@@ -22,7 +17,7 @@ var ticketSchema = new Schema({
 
 
 ticketSchema.methods.removeTicket = function (ticketId){
-	this.model('Ticket').findByIdAndRemove({ _id: ticketId }, function(err) {
+	this.model('Ticket').findByIdAndRemove(ticketId, {}, function(err) {
     if (!err) {
            return ('Ticket removed %s', ticketId);
     }

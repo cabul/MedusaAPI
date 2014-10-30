@@ -11,16 +11,28 @@ exports.requestTicket = function(req, res){
 	return res.send(params);
 };
 
+function removeTicket (ticketId){
+	Ticket.findByIdAndRemove(ticketId, {}, function(err) {
+    	if (!err) {
+           	return ('Ticket removed %s', ticketId);
+    	}
+    	else {
+          	console.log('Could not remove ticket by id %s', ticketId) ;
+           	return errorHandler(err);
+    	}
+	});
+}
 exports.requestMatch = function(req, res, next){
-	var ticket = new Ticket(req.body);
-	//req.body._id = ticketId
-	Match.findOne({ 'players[0].ticket': req.body._id ,status: 'not started'}, 'players', function(err, match){
+	//var ticket = new Ticket();
+	var ticketId = req.body.id;
+	Match.findOne({ 'players[0].ticket': ticketId ,status: 'not started'}, 'players', function(err, match){
 		if(err)
 			return res.status(400).send({
 							message: 'Error ocurred while looking for a match '
 						});
 		if(match){
-			req.body.ticket.removeTicket(req.body._id);
+			//ticket.removeTicket(ticketId);
+			removeTicket(ticketId);
 			return res.send({matchId: match._id, players: match.players, player: 0}); //player: 0 = first player
 		}else{
 			Ticket.findOne({}, function (err, oponent){
@@ -30,32 +42,36 @@ exports.requestMatch = function(req, res, next){
 							message: 'Could not processed requet for ticket with id : '+ req.body._id
 						});
 			if (oponent) {
-				var players = [oponent._id, req.body._id];
+				var players = [oponent._id, ticketId];
+				Ticket.findById(ticketId, function(err, userTicket){
 				var newMatch = new Match({
-									players: [{player1: { name: req.body.info[0], ticket: players[0]}},
-						 		   			{player2: { name: oponent.name, ticket: players[1]}}],
-								   	match_info: [{player1: players[0]}, {player2: players[1]}],
-									init_date: new Date(),
-									Last_Turn: 0,
-									turns: [], 
-									status: 'not started'
+								players: [{player1: { name: userTicket.info[0], ticket: players[0]}},
+						 		   		{player2: { name: oponent.name, ticket: players[1]}}],
+								match_info: [{player1: players[0]}, {player2: players[1]}],
+								init_date: new Date(),
+								Last_Turn: 0,
+								turns: [], 
+								status: 'not started'
 	   							});
 	    
 	    		newMatch.save(function(err){
 				if(err){
 					console.log('Could not create new match');
 					return res.status(400).send({
-							message: 'Error ocurred while creating match'
-						});
+										message: 'Error ocurred while creating match'
+								});
 				}
 				
 	  	    	});
-    			req.body.ticket.removeTicket(req.body._id);
+    			//ticket.removeTicket(userTicket._id);
+    			removeTicket(ticketId);
         		return res.send({matchId: newMatch._id, players: newMatch.players, player: 1}); //player: 1 = second player
+				}); 
+								
       	
     		}else{
     			console.log('Could not find adversary');
-      			res.send('Could not find adversary. Please wait for an oponent...');
+      			return res.send('Could not find adversary. Please wait for an oponent...');
 			}
 			
 		    });
@@ -64,6 +80,7 @@ exports.requestMatch = function(req, res, next){
 	});
 	
 };
+
 
 exports.waitTurn = function(req, res, next){
 	var params = {	matchId : req.param('matchId'),
