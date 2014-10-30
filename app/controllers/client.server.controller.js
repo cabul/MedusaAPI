@@ -16,8 +16,9 @@ exports.requestTicket = function(req, res){
 							message: 'Error ocurred while creating ticket: \n' + err + '\n' + newTicket
 						});
 				}
-				return res.send(newTicket._id);
-	  	    });	
+				
+	});	
+	return res.send(newTicket._id);
 };
 
 function removeTicket (ticketId){
