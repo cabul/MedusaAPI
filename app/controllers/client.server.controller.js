@@ -101,7 +101,7 @@ exports.waitTurn = function(req, res, next){
 								});
 		if(match){
 			//var turns = match.getTurns(matchId);
-			if(match.last_turn === nextTurn - 1){
+			if(match.last_turn === nextTurn){
 				return res.send({matchId: matchId, players: req.body.players, player: 0, nextTurn: nextTurn}); 
 				//player:0--> Le toca el turno
 			}else{
@@ -122,13 +122,40 @@ exports.waitTurn = function(req, res, next){
 };
 
 exports.submitTurn = function(req, res){
-	var params = {	
+	var params = req.body;
+	var matchId = params.matchId;
+	var turn = params.turn;
+	if(params.player === 0){
+	Match.findById(matchId, function(err, match){
+		if(err)
+			return res.status(400).send({
+										message: 'Error ocurred while creating match'
+								});
+		if(match){
+			match.turns[match.last_turn] = turn;
+			match.last_turn = match.last_turn +1;
+			match.save(function(err){
+				if(err)
+					return res.status(400).send({
+										message: 'Error ocurred while submiting saving new turn'
+								});
+			});
+			// player:1 --> Ahora le tocará esperar por el próximo turno
+			res.send({matchId: matchId, players: params.players, player: 1, nextTurn: match.last_turn + 1});
+		}else{
+			return res.send('Error: There is no match with id = '+matchId);
+		}
+	});
+	}else{
+		return res.send('Error: It is not your turn');
+	}
+	/*var params = {	
 		matchId: req.param('matchId'),
 		ticketId: req.param('ticketId'),
 		turnId: req.param('turnId'),
 		turnInfo: req.param('turnInfo')
 	};
-	return res.status(400).send(params);
+	return res.status(400).send(params);*/
 };
 
 exports.getMatchStatus = function(req, res){
