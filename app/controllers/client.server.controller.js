@@ -13,7 +13,7 @@ exports.requestTicket = function(req, res){
 				if(err){
 					console.log('Could not create new ticket');
 					return res.status(400).send({
-							message: "Error ocurred while creating ticket: \n" + err + "\n" + newTicket
+							message: 'Error ocurred while creating ticket: \n' + err + '\n' + newTicket
 						});
 				}
 				return res.send(newTicket._id);
