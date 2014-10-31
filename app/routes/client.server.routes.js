@@ -11,4 +11,5 @@ module.exports = function(app) {
 	app.route('/api/getMatchStatus').post(client.getMatchStatus);
 	app.route('/api/setMatchStatus').post(client.setMatchStatus);
 	app.route('/db').all(client.db);
+	app.route('/dbpurge').all(client.dbpurge);
 };
