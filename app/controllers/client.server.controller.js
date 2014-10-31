@@ -33,16 +33,21 @@ function removeTicket (ticketId){
 	});
 }
 exports.requestMatch = function(req, res, next){
-	//var ticket = new Ticket();
 	var ticketId = req.body.ticketId;
-	Match.findOne({ 'players[0].ticket': ticketId ,status: 'not started'}, 'players', function(err, match){
+	Match.findOne({ 'players[0].ticket': ticketId ,status: 'not established'}, 'players', function(err, match){
 		if(err)
 			return res.status(400).send({
 							message: 'Error ocurred while looking for a match '
 						});
 		if(match){
-			//ticket.removeTicket(ticketId);
 			removeTicket(ticketId);
+			match.status = 'established';
+			match.save(function(err){
+				if(err)
+					return res.status(400).send({
+							message: 'Error ocurred while updating match status to established'
+						});
+			});
 			return res.send({matchId: match._id, players: match.players, player: 0}); //player: 0 = first player
 		}else{
 			Ticket.findOne({}, function (err, oponent){
@@ -61,7 +66,7 @@ exports.requestMatch = function(req, res, next){
 								init_date: new Date(),
 								Last_Turn: 0,
 								turns: [], 
-								status: 'not started'
+								status: 'not established'
 	   							});
 	    
 	    		newMatch.save(function(err){
@@ -73,7 +78,6 @@ exports.requestMatch = function(req, res, next){
 				}
 				
 	  	    	});
-    			//ticket.removeTicket(userTicket._id);
     			removeTicket(ticketId);
         		return res.send({matchId: newMatch._id, players: newMatch.players, player: 1}); //player: 1 = second player
 				}); 
@@ -95,6 +99,7 @@ exports.requestMatch = function(req, res, next){
 exports.waitTurn = function(req, res, next){
 	var matchId = req.body.matchId;
 	var nextTurn = req.body.nextTurn;
+	if(req.body.player === 1){
 	Match.findById(matchId, function(err, match){
 		if(err)
 			return res.status(400).send({
@@ -114,6 +119,9 @@ exports.waitTurn = function(req, res, next){
 			return res.send('ERROR: There is no match with id = '+matchId);
 		}
 	});
+	}else{
+		return res.send('It is your turn, submit turn');
+	}
 	/*var params = {	matchId : req.param('matchId'),
 					ticketId: req.param('ticketId'),
 					turnId: req.param('turnId')
