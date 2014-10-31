@@ -8,16 +8,9 @@ var mongoose = require('mongoose'),
     Schema = mongoose.Schema;
 
 var ticketSchema = new Schema({
-  match: {
-      type: String,
-      required: false,
-      unique: false
-  },
-	info: {
-      type: String,
-      required: false,
-      unique: false
-  }
+  name: String,
+  elo: Number,
+  matchId: String
 });
 
 
