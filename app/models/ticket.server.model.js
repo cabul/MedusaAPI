@@ -14,14 +14,14 @@ var ticketSchema = new Schema({
 });
 
 
-ticketSchema.methods.removeTicket = function (){
-	this.model('Ticket').findByIdAndRemove(this.id, {}, function(err) {
+ticketSchema.static.removeTicket = function (ticketId){
+	this.model('Ticket').findByIdAndRemove(ticketId, {}, function(err) {
     if (!err) {
-           return ('Ticket removed %s', this.id);
+           return ('Ticket removed %s', ticketId);
     }
     else {
-           console.log('Could not remove ticket by id %s', this.id) ;
-           return handleError(err);
+           console.log('Could not remove ticket by id %s', ticketId) ;
+           return err;
     }
 });
 	
