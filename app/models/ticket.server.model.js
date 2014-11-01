@@ -3,7 +3,6 @@
 /**
  * Module dependencies.
  */
-var handleError = require ('../controllers/errors');
 var mongoose = require('mongoose'), 
     Schema = mongoose.Schema;
 

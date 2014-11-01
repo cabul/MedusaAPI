@@ -46,7 +46,7 @@ exports.requestMatch = function(req, res, next){
 						});
 					}
 					});
-					return res.send({matchId: match.id, players: match.players, player: 0}); //player: 0 = first player
+					return res.send({matchId: match.id, players: match.players, player: 0 , submitTurn: true, nextTurn:0}); //player: 0 = first player
 				});
 				
 				
@@ -76,6 +76,12 @@ exports.requestMatch = function(req, res, next){
 					}
 				
 	  	    		});
+	  	    		oponent.match = newMatch.id;
+	  	    		oponent.save(function(err){
+	  	    			return res.status(500).send({
+										message: 'Error ocurred while updating match in oponent ticket'
+								});
+	  	    		});
     				Ticket.removeTicket(ticket.id, function(err){
 					if(err){
 						return res.status(500).send({
@@ -84,7 +90,7 @@ exports.requestMatch = function(req, res, next){
 					}
 			    	});
         			return res.send({matchId: newMatch._id, players: newMatch.players, 
-        								player: 1, nextTurn:1}); //player: 1 = second player
+        								player: 1, submitTurn: false, nextTurn:1}); //player: 1 = second player
 
 			
 
@@ -111,24 +117,35 @@ exports.requestMatch = function(req, res, next){
 exports.waitTurn = function(req, res, next){
 	var matchId = req.body.matchId;
 	var nextTurn = req.body.nextTurn;
-	if(req.body.player === 1){
+	var player = req.body.player;
+	if(!req.body.submitTurn){
 	Match.findById(matchId, function(err, match){
 		if(err)
-			return res.status(400).send({
+			return res.status(500).send({
 										message: 'Error ocurred while looking for match with id = '+matchId
 								});
 		if(match){
-			//var turns = match.getTurns(matchId);
-			if(match.last_turn === nextTurn){
-				return res.send({matchId: matchId, players: req.body.players, player: 0, nextTurn: nextTurn}); 
-				//player:0--> Le toca el turno
+			var last_turn = match.last_turn(function(err){
+				if(err)
+					return res.status(500).send({
+										message: 'Error ocurred while looking for match with id = '+matchId
+								});
+			});
+			if(last_turn === nextTurn){
+				return res.send({matchId: matchId, players: req.body.players, player: player, 
+								submitTurn: true, nextTurn: nextTurn +1 }); 
+								//submitTurn: true--> Le toca el turno
 			}else{
-				return res.send({matchId: matchId, players: req.body.players, player: 1, nextTurn: nextTurn}); 
-				//player:1--> Sigue en espera 
+				return res.send({matchId: matchId, players: req.body.players, player: player,
+								submitTurn: false, nextTurn: nextTurn}); 
+								//submitTurn: false--> Sigue en espera 
 			}
 			
 		}else{
-			return res.send('ERROR: There is no match with id = '+matchId);
+			return  res.status(400).send({
+										message: 'ERROR: There is no match with id = '+matchId
+								});
+			
 		}
 	});
 	}else{
@@ -140,28 +157,34 @@ exports.submitTurn = function(req, res){
 	var params = req.body;
 	var matchId = params.matchId;
 	var turn = params.turn;
-	if(params.player === 0){
+	if(params.submitTurn){
 	Match.findById(matchId, function(err, match){
 		if(err)
-			return res.status(400).send({
+			return res.status(500).send({
 										message: 'Error ocurred while looking for match with id = '+matchId
 								});
 		if(match){
-			match.turns[match.last_turn + 1] = turn;
+			var last_turn = match.turns.length - 1;
+			match.turns[last_turn + 1] = turn;
 			match.save(function(err){
 				if(err)
 					return res.status(500).send({
 										message: 'Error ocurred while submiting saving new turn'
 								});
 			});
-			// player:1 --> Ahora le tocará esperar por el próximo turno
-			res.send({matchId: matchId, players: params.players, player: 1, nextTurn: match.last_turn + 1});
+			// submitTurn: false:1 --> Ahora le tocará esperar por el próximo turno
+			
+			res.send({matchId: matchId, players: params.players, player: 1, submitTurn: false, nextTurn: last_turn + 1});
 		}else{
-			return res.send('Error: There is no match with id = '+matchId);
+			return  res.status(400).send({
+										message: 'ERROR: There is no match with id = '+matchId
+								});
 		}
 	});
 	}else{
-		return res.send('Error: It is not your turn');
+		return res.status(400).send({
+										message: 'Error: It is not your turn'
+								});
 	}
 };
 
@@ -170,7 +193,7 @@ exports.getMatchStatus = function(req, res){
 	var matchId = match._id;
 	Match.findById(matchId, 'status' ,function(err, match_status){
 		if(err)
-			return res.status(400).send({
+			return res.status(500).send({
 							message: 'Error ocurred while creating match'
 			});
 
@@ -184,7 +207,7 @@ exports.setMatchStatus = function(req, res){
 	var matchId = match._id;
 	Match.findById(matchId, function (err, match) {
     	if (err) 
-    		return res.status(400).send({
+    		return res.status(500).send({
 							message: 'Error ocurred while looking for match to update'
 			});
 
@@ -193,7 +216,7 @@ exports.setMatchStatus = function(req, res){
 
        		match.save(function (err) {
     			if (err) 
-    			return res.status(400).send({
+    			return res.status(500).send({
 							message: 'Error ocurred while updating match status'
 				});
 
