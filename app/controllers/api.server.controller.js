@@ -136,8 +136,7 @@ exports.waitTurn = function(req, res, next){
 										message: 'Error ocurred while updating match with id = '+matchId
 								});
 				});
-				return res.send({matchId: matchId, players: req.body.players, player: player, 
-								 nextTurn: nextTurn +1 }); 
+				return res.send({matchId: matchId, players: req.body.players, player: player, nextTurn: nextTurn + 1 }); 
 							
 			}else{
 				return res.send({matchId: matchId, players: req.body.players, player: player, nextTurn: nextTurn}); 
@@ -180,7 +179,7 @@ exports.submitTurn = function(req, res){
 				});
 				// submitTurn: false:1 --> Ahora le tocará esperar por el próximo turno
 			
-				res.send({matchId: matchId, players: params.players, player: 1, submitTurn: false, nextTurn: last_turn + 1});
+				res.send({matchId: matchId, players: params.players, player: 1,  nextTurn: last_turn + 1});
 			}else{
 				return  res.status(400).send({
 										message: 'ERROR: There is no match with id = '+matchId
