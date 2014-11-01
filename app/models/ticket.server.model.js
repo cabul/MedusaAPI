@@ -4,15 +4,13 @@
  * Module dependencies.
  */
 var handleError = require ('../controllers/errors');
-var mongoose = require('mongoose'),
+var mongoose = require('mongoose'), 
     Schema = mongoose.Schema;
 
 var ticketSchema = new Schema({
-	info: {
-      type: Array,
-      required: false,
-      unique: false
-  }
+  name: String,
+  elo: Number,
+  matchId: String
 });
 
 
