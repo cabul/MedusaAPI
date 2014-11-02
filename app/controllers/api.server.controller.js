@@ -166,7 +166,7 @@ exports.submitTurn = function(req, res){
 	var matchId = params.matchId;
 	var turn = params.turn;
 	var player = params.player;
-	var user = params.players[params.player].ticket;
+	var user = params.players[player].ticket;
 	var nextTurn = params.nextTurn;
 	Match.findById(matchId, function(err, match){
 		
@@ -191,7 +191,7 @@ exports.submitTurn = function(req, res){
 						});
 						// submitTurn: false:1 --> Ahora le tocará esperar por el próximo turno
 						var newTurn = match.turns.length;
-						res.send({match: match, matchId: matchId, players: params.players, player: player,  nextTurn: newTurn});
+						res.send({matchId: matchId, players: params.players, player: player,  nextTurn: newTurn});
 					}else{
 						return res.status(400).send({
 										message: 'It is not your turn'
