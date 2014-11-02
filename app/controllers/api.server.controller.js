@@ -7,18 +7,17 @@ var mongoose = require('mongoose'),
 //	async = require('async');
 
 exports.requestTicket = function(req, res){
-	var params = { info : req.param('info')?req.param('info'):req.body.info};
 	var newTicket = new Ticket(req.body); 
 	newTicket.save(function(err){
 				if(err){
 					console.log('Could not create new ticket');
 					return res.status(500).send({
-							message: 'Error ocurred while creating ticket: \n' + err + '\n' + newTicket
+							message: 'Error ocurred while creating ticket'
 						});
 				}
 				
 	});	
-	return res.send(newTicket._id);
+	return res.status(201).send(newTicket._id);
 };
 
 exports.requestMatch = function(req, res, next){
@@ -39,7 +38,7 @@ exports.requestMatch = function(req, res, next){
 						});
 
 					});
-					Ticket.removeTicket(ticket.id, function(err){
+					Ticket.remove({_id: ticket.id}, function(err){
 					if(err){
 						return res.status(500).send({
 							message: 'Error ocurred while removing ticket'
@@ -83,7 +82,7 @@ exports.requestMatch = function(req, res, next){
 										message: 'Error ocurred while updating match in oponent ticket'
 								});
 	  	    		});
-    				Ticket.removeTicket(ticket.id, function(err){
+    				Ticket.remove({_id: ticket.id}, function(err){
 					if(err){
 						return res.status(500).send({
 							message: 'Error ocurred while removing ticket'
@@ -104,7 +103,7 @@ exports.requestMatch = function(req, res, next){
 			}
 		}else{
 			return res.status(400).send({
-							message: 'Ticket '+ticket.id+ 'does not exist'
+							message: 'Ticket '+req.body.ticketId+ 'does not exist'
 						});
 		}
 	});
