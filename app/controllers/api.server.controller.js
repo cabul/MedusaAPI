@@ -58,12 +58,12 @@ exports.requestMatch = function(req, res, next){
 							message: 'Could not processed requet'
 						});
 				if (oponent && ticket.id !== oponent.id) {
-					var players = [oponent.id, ticket.id];
 					var newMatch = new Match({
 							players: 
-								[{player1: { name: oponent.name, elo: oponent.elo, ticket: players[0], submitTurn: true}},
-						 		{player2: { name: ticket.name, elo: ticket.elo, ticket: players[1], submitTurn: false}}],
-							match_info: {player1: players[0], player2: players[1], turn: players[0]},//-->Empieza el player1
+								[{ name: oponent.name, elo: oponent.elo, ticket: oponent.id, submitTurn: true},
+						 		{ name: ticket.name, elo: ticket.elo, ticket: ticket.id, submitTurn: false}],
+							match_info: [{player1: oponent.id, player2: ticket.id},
+										 {turn: oponent.id}],//-->Empieza el player1
 							init_date: new Date(),
 							turns: [], 
 							status: 'not established'
@@ -115,6 +115,7 @@ exports.requestMatch = function(req, res, next){
 exports.waitTurn = function(req, res, next){
 	var params = req.body;
 	var matchId = req.body.matchId;
+	console.log(matchId);
 	var nextTurn = params.nextTurn;
 	var player = params.player;
 	var players = params.players;
@@ -125,7 +126,7 @@ exports.waitTurn = function(req, res, next){
 										message: 'Error ocurred while looking for match with id = '+matchId
 								});
 		if(match){
-			if(!match.players[player].submitTurn){
+			if(match.players[player].submitTurn === false){
 				var last_turn = match.turns.length -1;
 				if(last_turn === nextTurn){
 					match.players[player].submitTurn = true;
@@ -133,10 +134,10 @@ exports.waitTurn = function(req, res, next){
 					match.save(function(err){
 						if(err)
 							return res.status(500).send({
-										message: 'Error ocurred while updating match with id = '+matchId
+										message: 'Error ocurred while updating match with id = '+match.id
 								});
 					});
-					return res.send({matchId: matchId, players: players, player: player, nextTurn: nextTurn + 1 }); 
+					return res.send({matchId: matchId, players: players, player: player, nextTurn: nextTurn}); 
 							
 				}else{
 					return res.send({matchId: matchId, players: players, player: player, nextTurn: nextTurn}); 
@@ -157,13 +158,16 @@ exports.waitTurn = function(req, res, next){
 	
 };
 
+		
+
+
 exports.submitTurn = function(req, res){
 	var params = req.body;
 	var matchId = params.matchId;
 	var turn = params.turn;
 	var player = params.player;
 	var user = params.players[params.player].ticket;
-	
+	var nextTurn = params.nextTurn;
 	Match.findById(matchId, function(err, match){
 		
 		if(err)
@@ -171,13 +175,13 @@ exports.submitTurn = function(req, res){
 										message: 'Error ocurred while looking for match with id = '+matchId
 								});
 		if(match){
-				if(match.players[player].submitTurn){
-		
-					if(match.match_info.turn === user){
-						var last_turn = match.turns.length - 1;
+				if(match.players[player].submitTurn === true){
+					console.log(match.players[player].submitTurn);
+					if(match.match_info[1].turn === user){
+						//var last_turn = match.turns.length - 1;
 						var oponent = 1 - player;
-						match.turns[last_turn + 1] = turn;
-						match.match_info.turn = match.players[oponent].ticket;
+						match.turns[nextTurn] = turn;
+						match.match_info[1].turn = match.players[oponent].ticket;
 						match.players[params.player].submitTurn = false; 
 						match.save(function(err){
 							if(err)
@@ -186,10 +190,10 @@ exports.submitTurn = function(req, res){
 								});
 						});
 						// submitTurn: false:1 --> Ahora le tocará esperar por el próximo turno
-			
-						res.send({matchId: matchId, players: params.players, player: 1,  nextTurn: last_turn + 1});
+						var newTurn = match.turns.length;
+						res.send({match: match, matchId: matchId, players: params.players, player: player,  nextTurn: newTurn});
 					}else{
-					return res.status(400).send({
+						return res.status(400).send({
 										message: 'It is not your turn'
 								});
 					}
