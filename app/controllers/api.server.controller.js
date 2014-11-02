@@ -136,8 +136,8 @@ exports.waitTurn = function(req, res, next){
 										message: 'Error ocurred while updating match with id = '+match.id
 								});
 					});
-					return res.send({matchId: matchId, players: players, player: player, nextTurn: nextTurn}); 
-							
+					//return res.send({matchId: matchId, players: players, player: player, nextTurn: nextTurn}); 
+					return res.send('It is your turn, submit turn');	
 				}else{
 					return res.send('Waiting ...'); 
 								//submitTurn: false--> Sigue en espera 
@@ -166,7 +166,6 @@ exports.submitTurn = function(req, res){
 	var turn = params.turn;
 	var player = params.player;
 	var user = params.players[player].ticket;
-	console.log(user);
 	var nextTurn = params.nextTurn;
 	Match.findById(matchId, function(err, match){
 		
@@ -176,8 +175,7 @@ exports.submitTurn = function(req, res){
 								});
 		if(match){
 				if(match.players[player].submitTurn === true){
-					console.log(match.players[player].submitTurn);
-					console.log(match.match_info[1].turn);
+				
 					if(parseInt(match.match_info[1].turn) === parseInt(user)){
 						
 						//var last_turn = match.turns.length - 1;
