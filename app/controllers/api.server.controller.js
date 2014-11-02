@@ -39,13 +39,13 @@ exports.requestMatch = function(req, res, next){
 						});
 
 					});
-					Ticket.removeTicket(ticket.id, function(err){
-					if(err){
-						return res.status(500).send({
-							message: 'Error ocurred while removing ticket'
-						});
-					}
+					Ticket.findByIdAndRemove(ticket.id, {}, function(err) {
+    					if(err)
+							return res.status(500).send({
+								message: 'Error ocurred while removing ticket'
+							});
 					});
+					
 					return res.send({matchId: match.id, players: match.players, player: 0, nextTurn:0}); //player: 0 = first player
 				});
 				
@@ -83,13 +83,12 @@ exports.requestMatch = function(req, res, next){
 										message: 'Error ocurred while updating match in oponent ticket'
 								});
 	  	    		});
-    				Ticket.removeTicket(ticket.id, function(err){
-					if(err){
-						return res.status(500).send({
-							message: 'Error ocurred while removing ticket'
-						});
-					}
-			    	});
+    				Ticket.findByIdAndRemove(ticket.id, {}, function(err) {
+    					if(err)
+							return res.status(500).send({
+								message: 'Error ocurred while removing ticket'
+							});
+					});
         			return res.send({matchId: newMatch._id, players: newMatch.players, 
         								player: 1,  nextTurn:1}); //player: 1 = second player
 
