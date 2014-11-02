@@ -113,8 +113,7 @@ exports.requestMatch = function(req, res, next){
 			
 
 exports.waitTurn = function(req, res, next){
-	var params = JSON.parse(req.body);
-	//var params = req.body;
+	var params = req.body;
 	var matchId = req.body.matchId;
 	var nextTurn = params.nextTurn;
 	var player = params.player;
@@ -159,7 +158,7 @@ exports.waitTurn = function(req, res, next){
 };
 
 exports.submitTurn = function(req, res){
-	var params = JSON.parse(req.body);
+	var params = req.body;
 	var matchId = params.matchId;
 	var turn = params.turn;
 	var player = params.player;
@@ -211,8 +210,7 @@ exports.submitTurn = function(req, res){
 };
 
 exports.getMatchStatus = function(req, res){
-	var match = new Match(req.body);
-	var matchId = match._id;
+	var matchId = req.body.matchId;
 	Match.findById(matchId, 'status' ,function(err, match_status){
 		if(err)
 			return res.status(500).send({
@@ -225,8 +223,7 @@ exports.getMatchStatus = function(req, res){
 
 
 exports.setMatchStatus = function(req, res){
-	var match = new Match(req.body);
-	var matchId = match._id;
+	var matchId = req.body.matchId;
 	Match.findById(matchId, function (err, match) {
     	if (err) 
     		return res.status(500).send({
