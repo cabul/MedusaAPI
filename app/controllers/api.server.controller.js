@@ -191,7 +191,7 @@ exports.submitTurn = function(req, res){
 			
 						res.send({matchId: matchId, players: params.players, player: 1,  nextTurn: last_turn + 1});
 					}else{
-					return res.status(500).send({
+					return res.status(400).send({
 										message: 'It is not your turn'
 								});
 					}
@@ -258,10 +258,10 @@ exports.db = function (req, res){
 	var show;
 	Ticket.find({}, function (err, tickets){
 		if(err) return res.send(err);
-		show = "====TICKETS====\n"+JSON.stringify(tickets);
+		show = '====TICKETS====\n'+JSON.stringify(tickets);
 		Match.find({}, function(err, matches){
 			if(err) return res.send(err);
-			show += "\n====MATCHES====\n"+JSON.stringify(matches);
+			show += '\n====MATCHES====\n'+JSON.stringify(matches);
 			res.send(show);
 		});
 	});
@@ -269,7 +269,7 @@ exports.db = function (req, res){
 
 exports.dbpurge = function (req, res){
 	Ticket.remove({}, function(err) { 
-   		console.log('collection removed') 
+   		console.log('collection removed');
 	});
-	res.send("tickets removed");
-}
+	res.send('tickets removed');
+};
