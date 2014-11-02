@@ -112,6 +112,8 @@ exports.requestMatch = function(req, res, next){
 	
 };
 			
+		
+
 
 exports.waitTurn = function(req, res, next){
 	var matchId = req.body.matchId;

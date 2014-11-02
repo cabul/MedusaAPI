@@ -4,7 +4,7 @@ var api = require('../../app/controllers/api');
 
 module.exports = function(app) {
 
-	app.route('/ap/requestTicket').post(api.requestTicket);
+	app.route('/api/requestTicket').post(api.requestTicket);
 	app.route('/api/requestMatch').post(api.requestMatch);
 	app.route('/api/waitTurn').post(api.waitTurn);
 	app.route('/api/submitTurn').post(api.submitTurn);
