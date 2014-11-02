@@ -114,8 +114,9 @@ exports.requestMatch = function(req, res, next){
 			
 
 exports.waitTurn = function(req, res, next){
-	var params = req.body;
-	var matchId = params.matchId;
+	var params = JSON.parse(req.body);
+	//var params = req.body;
+	var matchId = req.body.matchId;
 	var nextTurn = params.nextTurn;
 	var player = params.player;
 	var players = params.players;
@@ -159,49 +160,53 @@ exports.waitTurn = function(req, res, next){
 };
 
 exports.submitTurn = function(req, res){
-	var params = req.body;
+	var params = JSON.parse(req.body);
 	var matchId = params.matchId;
 	var turn = params.turn;
 	var player = params.player;
 	var user = params.players[params.player].ticket;
 	
 	Match.findById(matchId, function(err, match){
-		if(match.players[player].submitTurn){
 		
-			if(match.match_info.turn === user){
-				if(err)
-					return res.status(500).send({
+		if(err)
+			return res.status(500).send({
 										message: 'Error ocurred while looking for match with id = '+matchId
 								});
-				if(match){
-					var last_turn = match.turns.length - 1;
-					match.turns[last_turn + 1] = turn;
-					match.players[params.player].submitTurn = false; 
-					match.save(function(err){
-					if(err)
-						return res.status(500).send({
+		if(match){
+				if(match.players[player].submitTurn){
+		
+					if(match.match_info.turn === user){
+						var last_turn = match.turns.length - 1;
+						var oponent = 1 - player;
+						match.turns[last_turn + 1] = turn;
+						match.match_info.turn = match.players[oponent].ticket;
+						match.players[params.player].submitTurn = false; 
+						match.save(function(err){
+							if(err)
+							return res.status(500).send({
 										message: 'Error ocurred while submiting saving new turn'
 								});
-				});
-					// submitTurn: false:1 --> Ahora le tocará esperar por el próximo turno
+						});
+						// submitTurn: false:1 --> Ahora le tocará esperar por el próximo turno
 			
-					res.send({matchId: matchId, players: params.players, player: 1,  nextTurn: last_turn + 1});
-				}else{
-					return  res.status(400).send({
-										message: 'ERROR: There is no match with id = '+matchId
-								});
-				}
-			}else{
-				return res.status(500).send({
+						res.send({matchId: matchId, players: params.players, player: 1,  nextTurn: last_turn + 1});
+					}else{
+					return res.status(500).send({
 										message: 'It is not your turn'
 								});
-			}
+					}
 		
-		}else{
-			return res.status(400).send({
+				}else{
+					return res.status(400).send({
 										message: 'Error: It is not your turn'
 								});
+				}
+		}else{
+			return  res.status(400).send({
+										message: 'ERROR: There is no match with id = '+matchId
+								});
 		}
+			
 	});
 	
 };
