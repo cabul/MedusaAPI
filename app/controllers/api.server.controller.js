@@ -52,52 +52,51 @@ exports.requestMatch = function(req, res, next){
 				
 			}else{
 				Ticket.findOne({}, function (err, oponent){
-				console.log(oponent);
-				if(err)
-					return res.status(500).send({
+					console.log(oponent);
+					if(err)
+						return res.status(500).send({
 							message: 'Could not processed requet'
 						});
-				if (oponent && ticket.id !== oponent.id) {
-					var newMatch = new Match({
-							players: 
-								[{ name: oponent.name, elo: oponent.elo, ticket: oponent.id, submitTurn: true},
-						 		{ name: ticket.name, elo: ticket.elo, ticket: ticket.id, submitTurn: false}],
-							match_info: [{player1: oponent.id, player2: ticket.id},
-										 {turn: oponent.id}],//-->Empieza el player1
-							init_date: new Date(),
-							turns: [], 
-							status: 'not established'
+					if (oponent && ticket.id !== oponent.id) {
+						var newMatch = new Match({
+								players: 
+									[{ name: oponent.name, elo: oponent.elo, ticket: oponent.id, submitTurn: true},
+						 			{ name: ticket.name, elo: ticket.elo, ticket: ticket.id, submitTurn: false}],
+								match_info: [{player1: oponent.id, player2: ticket.id},
+											 {turn: oponent.id}],//-->Empieza el player1
+								init_date: new Date(),
+								turns: [], 
+								status: 'not established'
 							});
-	    			newMatch.save(function(err){
-					if(err){
-						console.log('Could not create new match');
-						return res.status(500).send({
+	    				newMatch.save(function(err){
+						if(err){
+							console.log('Could not create new match');
+							return res.status(500).send({
 										message: 'Error ocurred while creating match'
 								});
-					}
+						}
 				
-	  	    		});
-	  	    		oponent.match = newMatch.id;
-	  	    		oponent.save(function(err){
-	  	    			return res.status(500).send({
+	  	    			});
+	  	    			oponent.match = newMatch.id;
+	  	    			oponent.save(function(err){
+	  	    				return res.status(500).send({
 										message: 'Error ocurred while updating match in oponent ticket'
 								});
-	  	    		});
-    				Ticket.findByIdAndRemove(ticket.id, {}, function(err) {
+	  	    			});
+    					Ticket.findByIdAndRemove(ticket.id, {}, function(err) {
     					if(err)
 							return res.status(500).send({
 								message: 'Error ocurred while removing ticket'
 							});
-					});
-        			return res.send({matchId: newMatch._id, players: newMatch.players, 
+						});
+        				return res.send({matchId: newMatch.id, players: newMatch.players, 
         								player: 1,  nextTurn:1}); //player: 1 = second player
 
 			
 
-    			}else{
-    				console.log('Could not find adversary');
-      				return res.send('Could not find adversary. Please wait for an oponent...');
-				}
+    				}else{
+      					return res.send('Could not find adversary. Please wait for an oponent...');
+					}
 			
 		    	});
 			}
@@ -128,7 +127,7 @@ exports.waitTurn = function(req, res, next){
 		if(match){
 			if(match.players[player].submitTurn === false){
 				var last_turn = match.turns.length -1;
-				if(last_turn === nextTurn){
+				if(last_turn === nextTurn){ 
 					match.players[player].submitTurn = true;
 			   		//submitTurn: true--> Le toca el turno
 					match.save(function(err){
@@ -140,7 +139,7 @@ exports.waitTurn = function(req, res, next){
 					return res.send({matchId: matchId, players: players, player: player, nextTurn: nextTurn}); 
 							
 				}else{
-					return res.send({matchId: matchId, players: players, player: player, nextTurn: nextTurn}); 
+					return res.send('Waiting ...'); 
 								//submitTurn: false--> Sigue en espera 
 				}
 			}else{
@@ -167,6 +166,7 @@ exports.submitTurn = function(req, res){
 	var turn = params.turn;
 	var player = params.player;
 	var user = params.players[player].ticket;
+	console.log(user);
 	var nextTurn = params.nextTurn;
 	Match.findById(matchId, function(err, match){
 		
@@ -177,7 +177,9 @@ exports.submitTurn = function(req, res){
 		if(match){
 				if(match.players[player].submitTurn === true){
 					console.log(match.players[player].submitTurn);
-					if(match.match_info[1].turn === user){
+					console.log(match.match_info[1].turn);
+					if(parseInt(match.match_info[1].turn) === parseInt(user)){
+						
 						//var last_turn = match.turns.length - 1;
 						var oponent = 1 - player;
 						match.turns[nextTurn] = turn;
@@ -202,6 +204,7 @@ exports.submitTurn = function(req, res){
 					return res.status(400).send({
 										message: 'Error: It is not your turn'
 								});
+					
 				}
 		}else{
 			return  res.status(400).send({
