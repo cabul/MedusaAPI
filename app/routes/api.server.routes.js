@@ -10,6 +10,4 @@ module.exports = function(app) {
 	app.route('/api/submitTurn').post(api.submitTurn);
 	app.route('/api/getMatchStatus').post(api.getMatchStatus);
 	app.route('/api/setMatchStatus').post(api.setMatchStatus);
-	app.route('/db').post(api.db);
-	app.route('/dbpurge').post(api.dbpurge);
 };

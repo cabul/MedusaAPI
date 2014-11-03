@@ -252,24 +252,3 @@ exports.setMatchStatus = function(req, res){
 	    
     });
 };
-
-
-exports.db = function (req, res){
-	var show;
-	Ticket.find({}, function (err, tickets){
-		if(err) return res.send(err);
-		show = '====TICKETS====\n'+JSON.stringify(tickets);
-		Match.find({}, function(err, matches){
-			if(err) return res.send(err);
-			show += '\n====MATCHES====\n'+JSON.stringify(matches);
-			res.send(show);
-		});
-	});
-};
-
-exports.dbpurge = function (req, res){
-	Ticket.remove({}, function(err) { 
-   		console.log('collection removed');
-	});
-	res.send('tickets removed');
-};
