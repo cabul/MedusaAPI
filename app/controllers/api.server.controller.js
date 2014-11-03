@@ -28,9 +28,9 @@ exports.requestMatch = function(req, res, next){
 							message: 'Error ocurred'
 						});
 		if(ticket){
-			if(ticket.match){
+			if(ticket.matchId){
 				
-				Match.findById(ticket.match, function(err,match){
+				Match.findById(ticket.matchId, function(err,match){
 					match.status = 'established';
 					match.save(function(err){
 					if(err)
@@ -114,7 +114,6 @@ exports.requestMatch = function(req, res, next){
 exports.waitTurn = function(req, res, next){
 	var params = req.body;
 	var matchId = req.body.matchId;
-	console.log(matchId);
 	var nextTurn = params.nextTurn;
 	var player = params.player;
 	var players = params.players;
@@ -176,8 +175,8 @@ exports.submitTurn = function(req, res){
 		if(match){
 				if(match.players[player].submitTurn === true){
 				
-					if(parseInt(match.match_info[1].turn) === parseInt(user)){
-						
+					//if(parseInt(match.match_info[1].turn) === parseInt(user)){ //->para hacer pruebas con tickets numéricos
+					if(match.match_info[1].turn === user){
 						//var last_turn = match.turns.length - 1;
 						var oponent = 1 - player;
 						match.turns[nextTurn] = turn;
