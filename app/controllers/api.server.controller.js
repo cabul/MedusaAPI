@@ -7,7 +7,11 @@ var mongoose = require('mongoose'),
 //	async = require('async');
 
 exports.requestTicket = function(req, res){
-	var newTicket = new Ticket(req.body); 
+	var newTicket = new Ticket({
+			name: req.body.name,
+			elo: req.body.elo,
+			matchId: null
+			}); 
 	newTicket.save(function(err){
 				if(err){
 					console.log('Could not create new ticket');
