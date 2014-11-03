@@ -15,16 +15,15 @@ exports.requestTicket = function(req, res){
 							message: 'Error ocurred while creating ticket'
 						});
 				}
-				
+		return res.status(201).send(newTicket._id);
 	});	
-	return res.status(201).send(newTicket._id);
 };
 
 exports.requestMatch = function(req, res, next){
 	Ticket.findById(req.body.ticketId, function(err, ticket){
 		if(err)
 		return res.status(500).send({
-							message: 'Error ocurred'
+							message: 'Error retrieving ticket'
 						});
 		if(ticket){
 			if(ticket.matchId){
@@ -32,7 +31,7 @@ exports.requestMatch = function(req, res, next){
 				Match.findById(ticket.matchId, function(err,match){
 					match.status = 'established';
 					match.save(function(err){
-					if(err)
+					if(err) 
 						return res.status(500).send({
 							message: 'Error ocurred while updating match status to established'
 						});
@@ -40,59 +39,59 @@ exports.requestMatch = function(req, res, next){
 					});
 					Ticket.findByIdAndRemove(ticket.id, {}, function(err) {
     					if(err)
-							return res.status(500).send({
+							return res.status(500).send({ 
 								message: 'Error ocurred while removing ticket'
 							});
 					});
-					
 					return res.send({matchId: match.id, players: match.players, player: 0, nextTurn:0}); //player: 0 = first player
 				});
 				
 				
 			}else{
-				Ticket.findOne({}, function (err, oponent){
-					console.log(oponent);
+				Ticket.findOne({_id : {'$ne': ticket.id}, matchId: null}, function (err, oponent){
 					if(err)
 						return res.status(500).send({
 							message: 'Could not processed requet'
 						});
-					if (oponent && ticket.id !== oponent.id) {
+					if (oponent) {
 						var newMatch = new Match({
 								players: 
 									[{ name: oponent.name, elo: oponent.elo, ticket: oponent.id, submitTurn: true},
 						 			{ name: ticket.name, elo: ticket.elo, ticket: ticket.id, submitTurn: false}],
 								match_info: [{player1: oponent.id, player2: ticket.id},
 											 {turn: oponent.id}],//-->Empieza el player1
-								init_date: new Date(),
+								init_date: new Date(), 
 								turns: [], 
 								status: 'not established'
 							});
 	    				newMatch.save(function(err){
-						if(err){
-							console.log('Could not create new match');
-							return res.status(500).send({
-										message: 'Error ocurred while creating match'
-								});
-						}
-				
-	  	    			});
-	  	    			oponent.match = newMatch.id;
-	  	    			oponent.save(function(err){
-	  	    				return res.status(500).send({
-										message: 'Error ocurred while updating match in oponent ticket'
+							if(err){
+								console.log('Could not create new match');
+								return res.status(500).send({
+											message: 'Error ocurred while creating match'
+									});
+							}
+							
+		  	    			oponent.matchId = newMatch.id;
+		  	    			oponent.save(function(err){
+		  	    				if(err){
+			  	    				return res.status(500).send({
+												message: 'Error ocurred while updating match in oponent ticket  '+err
+										}); 
+								}
+	    			    		Ticket.findByIdAndRemove(ticket.id, {}, function(err) {
+    							if(err)
+									return res.status(500).send({
+										message: 'Error ocurred while removing ticket'
+									});
+  	    						return res.send({matchId: newMatch.id, players: newMatch.players, 
+   								player: 1,  nextTurn:1}); //player: 1 = second player 
 								});
 
-	  	    			});
-    					Ticket.findByIdAndRemove(ticket.id, {}, function(err) {
-    					if(err)
-							return res.status(500).send({
-								message: 'Error ocurred while removing ticket'
-							});
+		  	    			});
+
 						});
-        				return res.send({matchId: newMatch.id, players: newMatch.players, 
-        								player: 1,  nextTurn:1}); //player: 1 = second player
 
-			
 
     				}else{
       					return res.send('Could not find adversary. Please wait for an oponent...');
@@ -103,11 +102,9 @@ exports.requestMatch = function(req, res, next){
 		}else{
 			return res.status(400).send({
 							message: 'Ticket '+req.body.ticketId+ 'does not exist'
-						});
+			});
 		}
 	});
-	
-	
 };
 			
 
