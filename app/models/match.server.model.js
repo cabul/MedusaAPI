@@ -28,7 +28,7 @@ matchSchema.static.getTurns = function (matchId, turns){
 	});
 };
 
-matchSchema.static.removeMatch = function (matchId){
+/*matchSchema.static.removeMatch = function (matchId){
 	this.model('Match').findByIdAndRemove(matchId, {}, function(err) {
     if (!err) {
            return ('Match with id = %s has been removed ', matchId);
@@ -39,6 +39,6 @@ matchSchema.static.removeMatch = function (matchId){
     }
 });
 	
-};
+};*/
 
 mongoose.model('Match', matchSchema);
