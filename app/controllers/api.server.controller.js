@@ -32,6 +32,10 @@ exports.requestMatch = function(req, res, next){
     if(ticket){
       if(ticket.matchId){
         Match.findById(ticket.matchId, function(err,match){
+          if(!match)
+            return res.status(500).send({
+              message: 'Error retrieving match '+ticket.matchId
+            });
           match.status = 'established';
           match.save(function(err){
             if(err) 
@@ -102,14 +106,12 @@ exports.requestMatch = function(req, res, next){
 };
       
 exports.waitTurn = function(req, res, next) {
-  var params = req.body;
-  var matchId = req.body.matchId;
-  var nextTurn = params.nextTurn;
-  var player = params.player;
-  var players = params.players;
-  Match.findById(matchId, function(err, match) {
+  var nextTurn = req.body.nextTurn;
+  var player = req.body.player;
+  var players = req.body.players;
+  Match.findById(req.body.matchId, function(err, match) {
     if (err) return res.status(500).send({
-      message: 'Error ocurred while looking for match with id = ' + matchId
+      message: 'Error ocurred while looking for match with id = ' + req.body.matchId
     });
     if (match) {
       if (match.players[player].submitTurn === false) {
@@ -123,41 +125,37 @@ exports.waitTurn = function(req, res, next) {
             });
             return res.send('It is your turn, submit turn');
           });
-          //return res.send({matchId: matchId, players: players, player: player, nextTurn: nextTurn}); 
         } else {
+           //submitTurn: false--> Sigue en espera 
           return res.send('Waiting ...');
-          //submitTurn: false--> Sigue en espera 
         }
       } else {
         return res.send('It is your turn, submit turn');
       }
     } else {
       return res.status(400).send({
-        message: 'ERROR: There is no match with id = ' + matchId
+        message: 'ERROR: There is no match with id = ' + req.body.matchId
       });
     }
   });
 };
 exports.submitTurn = function(req, res) {
-  var params = req.body;
-  var matchId = params.matchId;
-  var turn = params.turn;
-  var player = params.player;
-  var user = params.players[player].ticket;
-  var nextTurn = params.nextTurn;
-  Match.findById(matchId, function(err, match) {
+  var turn = req.body.turn;
+  var player = req.body.player;
+  var user = req.body.players[player].ticket;
+  var nextTurn = req.body.nextTurn;
+  Match.findById(req.body.matchId, function(err, match) {
     if (err) return res.status(500).send({
-      message: 'Error ocurred while looking for match with id = ' + matchId
+      message: 'Error ocurred while looking for match with id = ' + req.body.matchId
     });
     if (match) {
       if (match.players[player].submitTurn === true) {
         //if(parseInt(match.match_info[1].turn) === parseInt(user)){ //->para hacer pruebas con tickets numéricos
         if (match.match_info[1].turn === user) {
-          //var last_turn = match.turns.length - 1;
           var oponent = 1 - player;
           match.turns[nextTurn] = turn;
           match.match_info[1].turn = match.players[oponent].ticket;
-          match.players[params.player].submitTurn = false;
+          match.players[player].submitTurn = false;
           match.save(function(err) {
             if (err) return res.status(500).send({
               message: 'Error ocurred while submiting saving new turn'
@@ -165,8 +163,8 @@ exports.submitTurn = function(req, res) {
             // submitTurn: false:1 --> Ahora le tocará esperar por el próximo turno
             var newTurn = match.turns.length;
             res.send({
-              matchId: matchId,
-              players: params.players,
+              matchId: req.body.matchId,
+              players: req.body.players,
               player: player,
               nextTurn: newTurn
             });
@@ -183,27 +181,29 @@ exports.submitTurn = function(req, res) {
       }
     } else {
       return res.status(400).send({
-        message: 'ERROR: There is no match with id = ' + matchId
+        message: 'ERROR: There is no match with id = ' + req.body.matchId
       });
     }
   });
 };
 
 exports.getMatchStatus = function(req, res) {
-  var matchId = req.body.matchId;
-  Match.findById(matchId, 'status', function(err, match_status) {
+  Match.findById(req.body.matchId, 'status', function(err, match_status) {
+    if(!match_status)
+            return res.status(404).send({
+              message: 'Match '+req.body.matchId+' not found'
+            });
     if (err) return res.status(500).send({
-      message: 'Error ocurred while creating match'
+      message: 'Error ocurred while looking for match'
     });
     res.send(match_status);
   });
 };
 
 exports.setMatchStatus = function(req, res) {
-  var matchId = req.body.matchId;
-  Match.findById(matchId, function(err, match) {
+  Match.findById(req.body.matchId, function(err, match) {
     if (err) return res.status(500).send({
-      message: 'Error ocurred while looking for match to update'
+      message: 'Error ocurred while looking for match '+req.body.matchId +' to update'
     });
     if (match) {
       match.status = req.body.status;
@@ -214,7 +214,7 @@ exports.setMatchStatus = function(req, res) {
         res.send(match);
       });
     } else {
-      res.send('ERROR: There is no Match with id = ' + matchId);
+      res.status(400).send('ERROR: There is no Match with id = ' + req.body.matchId);
     }
   });
 };
