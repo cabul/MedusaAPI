@@ -10,22 +10,22 @@ exports.dbdisplay = function (req, res){
 	Ticket.find({}, function (err, tickets){
 		if(err) return res.status(500).send('internal server error');
 		display = '====TICKETS====\n';
-		if(tickets.length == 0){ 
-			display += "There are no tickets";
+		if(tickets.length === 0){ 
+			display += 'There are no tickets';
 		}else{
 			tickets.forEach(function (ticket){
-				display += JSON.stringify(ticket)+"\n";
+				display += JSON.stringify(ticket)+'\n';
 			});
 		}
 
 		Match.find({}, function(err, matches){
 			if(err) res.status(500).send('internal server error');
 			display += '\n====MATCHES====\n';
-			if(matches.length == 0){ 
-				display += "There are no matches";
+			if(matches.length === 0){ 
+				display += 'There are no matches';
 			}else{
 				matches.forEach(function (match) {
-					display += JSON.stringify(match)+"\n";
+					display += JSON.stringify(match)+'\n';
 				});
 			}
 			res.send(display);
