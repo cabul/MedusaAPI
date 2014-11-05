@@ -117,7 +117,7 @@ exports.requestMatch = function(req, res, next){
 };
 			
 
-exports.waitTurn = function(req, res, next){
+exports.waitTurn = function(req, res){
 	var matchId = req.body.matchId;
 	var nextTurn = req.body.nextTurn;
 	var player = req.body.player;
@@ -130,7 +130,7 @@ exports.waitTurn = function(req, res, next){
 								});
 		if(match){
 			if(match.players[player].submitTurn === false){
-				var last_turn = match.turns.length -1;
+				var last_turn = match.turns.length;
 				if(last_turn === nextTurn){ 
 					match.players[player].submitTurn = true;
 			   		//submitTurn: true--> Le toca el turno
@@ -140,7 +140,6 @@ exports.waitTurn = function(req, res, next){
 										message: 'Error ocurred while updating match with id = '+match.id
 								});
 					});
-					//return res.send({matchId: matchId, players: players, player: player, nextTurn: nextTurn}); 
 					return res.send('It is your turn, submit turn');	
 				}else{
 					return res.send('Waiting ...'); 
@@ -190,7 +189,7 @@ exports.submitTurn = function(req, res){
 						});
 					});
 					// submitTurn: false:1 --> Ahora le tocará esperar por el próximo turno
-					var newTurn = match.turns.length;
+					var newTurn = match.turns.length + 1;
 					res.send({matchId: matchId, players: req.body.players, player: player,  nextTurn: newTurn});
 				}else{
 					return res.status(400).send({
