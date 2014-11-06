@@ -1,15 +1,16 @@
 'use strict';
 
-var mongoose = require('mongoose'),
+var mongoose = require('mongoose'), 
   errorHandler = require('./errors'),
-  Match = mongoose.model('Match'),
+  findMatch = require('./api/api.matchmaking'),
+  Match = mongoose.model('Match'), 
   Ticket = mongoose.model('Ticket');
-//  async = require('async');
+//  async = require('async'); 
 
 exports.requestTicket = function(req, res) {
   var newTicket = new Ticket({
     name: req.body.name,
-    elo: req.body.elo,
+    elo: req.body.elo?req.body.elo:0,
     matchId: null
   });
   newTicket.save(function(err) {
@@ -23,7 +24,7 @@ exports.requestTicket = function(req, res) {
   });
 };
 
-exports.requestMatch = function(req, res, next){
+exports.requestMatch = function(req, res){
 
 	Ticket.findById(req.body.ticketId, function(err, ticket){
 		if(err)
@@ -31,7 +32,7 @@ exports.requestMatch = function(req, res, next){
 							message: 'Error retrieving ticket'
 						});
 		if(ticket){
-			if(ticket.matchId){
+			if(ticket.matchId){ //This ticket has an associated match
 				
 				Match.findById(ticket.matchId, function(err,match){
 					if(!match)
@@ -57,57 +58,8 @@ exports.requestMatch = function(req, res, next){
 				});
 				
 				
-			}else{
-				Ticket.findOne({_id : {'$ne': ticket.id}, matchId: null}, function (err, oponent){
-					if(err)
-						return res.status(500).send({
-							message: 'Could not processed requet'
-						});
-					if (oponent) {
-						var newMatch = new Match({
-								players: 
-									[{ name: oponent.name, elo: oponent.elo, ticket: oponent.id, submitTurn: true},
-						 			{ name: ticket.name, elo: ticket.elo, ticket: ticket.id, submitTurn: false}],
-								match_info: [{player1: oponent.id, player2: ticket.id},
-											 {turn: oponent.id}],//-->Empieza el player1
-								init_date: new Date(), 
-								turns: [], 
-								status: 'not established'
-							});
-	    				newMatch.save(function(err){
-							if(err){
-								console.log('Could not create new match');
-								return res.status(500).send({
-											message: 'Error ocurred while creating match'
-									});
-							}
-							
-		  	    			oponent.matchId = newMatch.id;
-		  	    			oponent.save(function(err){
-		  	    				if(err){
-			  	    				return res.status(500).send({
-												message: 'Error ocurred while updating match in oponent ticket  '+err
-										}); 
-								}
-	    			    		Ticket.findByIdAndRemove(ticket.id, {}, function(err) {
-    							if(err)
-									return res.status(500).send({
-										message: 'Error ocurred while removing ticket'
-									});
-  	    						return res.send({matchId: newMatch.id, players: newMatch.players, 
-   								player: 1,  nextTurn:1}); //player: 1 = second player 
-								});
-
-		  	    			});
-
-						});
-
-
-    				}else{
-      					return res.send('Could not find adversary. Please wait for an oponent...');
-					}
-			
-		    	});
+			}else{ //This ticket has no associated match yet 
+        findMatch(ticket, res);
 			}
 		}else{
 			return res.status(400).send({
