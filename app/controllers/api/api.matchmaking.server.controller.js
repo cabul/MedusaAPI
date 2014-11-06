@@ -1,5 +1,4 @@
 'use strict';
-//Matchmaking 
 
 var mongoose = require('mongoose'),
   Match = mongoose.model('Match'),
@@ -8,34 +7,34 @@ var mongoose = require('mongoose'),
 var _eloratio = 0.3; // 0<_eloRatio<1, the bigger the ratio, more oponents will match
 
 module.exports = function (ticket, res){
-	if(hasElo(ticket)) eloPair(ticket, res);
-	else{fifoPair(ticket, res);}
+  if(hasElo(ticket)) eloPair(ticket, res);
+  else{fifoPair(ticket, res);}
 };
 
 
 var fifoPair = function(ticket, res) {
-	var query = Ticket.findOne({
-	    _id: {
-	      '$ne': ticket.id
-	    },
-	    matchId: null,
-	    elo: 0
+  var query = Ticket.findOne({
+      _id: {
+        '$ne': ticket.id
+      },
+      matchId: null,
+      elo: 0
   });
   query.exec(function (err, oponent) { //Cosas paranormales
-  	setMatch(err, oponent, ticket, res);
+    setMatch(err, oponent, ticket, res);
   });
 };
 
 var eloPair = function(ticket, res){
-	var query = Ticket.findOne({
-	    _id: {
-	      '$ne': ticket.id
-	    },
-	    matchId: null,
-	    elo: {$gte : ticket.elo*(1-_eloratio), $lte: ticket.elo*(1+_eloratio)}
+  var query = Ticket.findOne({
+      _id: {
+        '$ne': ticket.id
+      },
+      matchId: null,
+      elo: {$gte : ticket.elo*(1-_eloratio), $lte: ticket.elo*(1+_eloratio)}
   });
   query.exec(function (err, oponent) { //Cosas paranormales
-  	setMatch(err, oponent, ticket, res);
+    setMatch(err, oponent, ticket, res);
   });
 };
 
@@ -99,5 +98,5 @@ var setMatch = function (err, oponent, ticket, res) {
 };
 
 var hasElo = function (ticket) {
-	return (ticket.elo > 0);
+  return (ticket.elo > 0);
 };
