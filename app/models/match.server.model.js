@@ -9,7 +9,6 @@ var mongoose = require('mongoose'),
 var matchSchema = new Schema({
 	players: Array,
 	init_date: Date,
-  match_info: Array,
 	turns: Array, 
 	status: String
 });

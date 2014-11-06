@@ -54,7 +54,7 @@ exports.requestMatch = function(req, res){
 								message: 'Error ocurred while removing ticket'
 							});
 					});
-					return res.send({matchId: match.id, players: match.players, player: 0, nextTurn:0}); //player: 0 = first player
+					return res.send({matchId: match.id,  player: req.body.ticketId, nextTurn:0}); //player: 0 = first player
 				});
 				
 				
