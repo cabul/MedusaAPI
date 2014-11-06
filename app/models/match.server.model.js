@@ -8,17 +8,13 @@ var mongoose = require('mongoose'),
 
 var matchSchema = new Schema({
 	players: Array,
-	match_info: Array,
 	init_date: Date,
 	turns: Array, 
 	status: String
 });
 
-/*matchSchema.methods.lastTurn = function(){
-  return this.turns.length - 1;
-};*/
 
-matchSchema.static.getTurns = function (matchId, turns){
+/*matchSchema.static.getTurns = function (matchId, turns){
 	this.model('Match').findById(matchId, 'turns', function (err, turns){
 		if(err){
 			console.log('Could not get turns of match with id: s%', matchId);
@@ -26,7 +22,7 @@ matchSchema.static.getTurns = function (matchId, turns){
 		}
 		return turns;
 	});
-};
+};*/
 
 /*matchSchema.static.removeMatch = function (matchId){
 	this.model('Match').findByIdAndRemove(matchId, {}, function(err) {
