@@ -119,104 +119,99 @@ exports.requestMatch = function(req, res, next){
 			
 
 exports.waitTurn = function(req, res){
-	var matchId = req.body.matchId;
-	var nextTurn = req.body.nextTurn;
-	var player = req.body.player;
-	var players = req.body.players;
-	Match.findById(matchId, function(err, match){
-	
-		if(err)
-			return res.status(500).send({
-										message: 'Error ocurred while looking for match with id = '+matchId
-								});
-		if(match){
-			if(match.players[player].submitTurn === false){
-				var last_turn = match.turns.length;
-				if(last_turn === nextTurn){ 
-					match.players[player].submitTurn = true;
-			   		//submitTurn: true--> Le toca el turno
-					match.save(function(err){
-						if(err)
-							return res.status(500).send({
-										message: 'Error ocurred while updating match with id = '+match.id
-								});
-					});
-					return res.send('It is your turn, submit turn');	
-				}else{
-					return res.send('Waiting ...'); 
-								//submitTurn: false--> Sigue en espera 
-				}
-			}else{
-				return res.send('It is your turn, submit turn');
-			}
-				
-		}else{
-			return  res.status(400).send({
-										message: 'ERROR: There is no match with id = '+matchId
-								});
-			
-		}
-	
-	});
-	
+    var matchId = req.body.matchId;
+    var nextTurn = req.body.nextTurn;
+    var player = req.body.player; //ticketId del usuario
+
+    Match.findById(matchId, function(err, match){
+    
+      if(err)
+        return res.status(500).send({
+                                        message: 'Error ocurred while looking for match with id = '+matchId
+                                });
+      if(match){
+        var turn_player = (match.turns.length % 2 === 0)?0:1;
+          if(match.players[turn_player].ticket !== player){  
+            var last_turn = match.turns.length;
+            if(last_turn === nextTurn){ 
+              match.players[turn_player].submitTurn = true;
+              //submitTurn: true--> Le toca el turno
+              match.save(function(err){
+                if(err)
+                  return res.status(500).send({
+                                        message: 'Error ocurred while updating match with id = '+match.id
+                                });
+                return res.send({message: 'It is your turn, submit turn', last_turn: match.turns[match.turns.length]}); 
+                });
+                    
+             }else{
+                //submitTurn: false--> Sigue en espera 
+                return res.send('Waiting ...'); 
+              }
+          }else{
+                return res.send({message: 'It is your turn, submit turn', last_turn: match.turns[match.turns.length]});
+          }
+                
+        }else{
+            return  res.status(400).send({
+                                        message: 'ERROR: There is no match with id = '+matchId
+                                });
+            
+        }
+    
+    });
+    
 };
 
-		
+        
 exports.submitTurn = function(req, res){
-	var matchId = req.body.matchId;
-	var turn = req.body.turn;
-	var player = req.body.player;
-	var user = req.body.players[player].ticket;
-	var nextTurn = req.body.nextTurn;
-	Match.findById(matchId, function(err, match){
-		
-		if(err)
-			return res.status(500).send({
-										message: 'Error ocurred while looking for match with id = '+matchId
-								});
-		if(match){
-			if(match.players[player].submitTurn === true){
-				
-				//if(parseInt(match.match_info[1].turn) === parseInt(user)){ //->para hacer pruebas con tickets numéricos
-				if(match.match_info[1].turn === user){
-					var oponent = 1 - player;
-					match.turns[nextTurn] = turn;
-					match.match_info[1].turn = match.players[oponent].ticket;
-					match.players[player].submitTurn = false; 
-					match.save(function(err){
-					if(err)
-						return res.status(500).send({
-							message: 'Error ocurred while submiting saving new turn'
-						});
-					});
-					// submitTurn: false:1 --> Ahora le tocará esperar por el próximo turno
-					var newTurn = match.turns.length + 1;
-					res.send({matchId: matchId, players: req.body.players, player: player,  nextTurn: newTurn});
-				}else{
-					return res.status(400).send({
-										message: 'It is not your turn'
-								});
-				}
-		
-			}else{
-				return res.status(400).send({
-										message: 'Error: It is not your turn'
-								});
-					
-			}
+    var matchId = req.body.matchId;
+    var turn = req.body.turn;
+    var player = req.body.player; //player = ticketId
+    var nextTurn = req.body.nextTurn;
+    Match.findById(matchId, function(err, match){
+        
+      if(err)
+        return res.status(500).send({
+                                        message: 'Error ocurred while looking for match with id = '+matchId
+                                });
+      if(match){
+        var turn_player = (match.turns.length % 2 === 0)?0:1;
+        if(match.players[turn_player].ticket === player){ 
+          match.turns.push(turn);
+          // submitTurn: false--> Ahora le tocará esperar por el próximo turno
+          match.players[turn_player].submitTurn = false; 
+          match.save(function(err){
+            if(err)
+              return res.status(500).send({
+                        message: 'Error ocurred while submiting saving new turn'
+              });
+              var newTurn = match.turns.length + 1;
+              res.send({matchId: matchId, player: player,  nextTurn: newTurn});
+          });
+              
+        }else{
+          return res.status(400).send({
+                                        message: 'Error: It is not your turn'
+          });
+        }
 
-		}else{
-			return  res.status(400).send({
-										message: 'ERROR: There is no match with id = '+matchId
-								});
-		}
-			
-	});
-	
+      }else{
+            return  res.status(400).send({
+                                        message: 'ERROR: There is no match with id = '+matchId
+                                });
+      }
+            
+    });
+    
 };
 
 exports.getMatchStatus = function(req, res){
 	Match.findById(req.body.matchId, 'status' ,function(err, match_status){
+		if(!match_status)
+						return res.status(400).send({
+							message: 'There is no match '+req.body.matchId
+						});
 		if(err)
 			return res.status(500).send({
 							message: 'Error ocurred while looking for match with id = '+req.body.matchId
