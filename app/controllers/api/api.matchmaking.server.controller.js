@@ -11,20 +11,22 @@ var setMatch = function(err, oponent, ticket, res) {
     message: 'Could not processed request'
   });
   if (oponent) {
+    var playersArray = [];
+    playersArray[String(ticket.id)] = {
+      name: oponent.name,
+      elo: oponent.elo,
+      playerIndex: 0,
+      lastSeenTurn: 0
+    };
+    playersArray[String(oponent.id)] = {
+      name: ticket.name,
+      elo: ticket.elo,
+      playerIndex: 1,
+      lastSeenTurn: 0
+    };
+    console.log(playersArray);
     var newMatch = new Match({
-      players: [{
-        name: oponent.name,
-        elo: oponent.elo,
-        ticket: oponent.id,
-        playerIndex: 0,
-        lastSeenTurn: 0
-      }, {
-        name: ticket.name,
-        elo: ticket.elo,
-        ticket: ticket.id,
-        playerIndex: 1,
-        lastSeenTurn: 0
-      }],
+      players: playersArray,
       init_date: new Date(),
       turns: []
     });
@@ -32,7 +34,7 @@ var setMatch = function(err, oponent, ticket, res) {
       if (err) {
         console.log('Could not create new match');
         return res.status(500).send({
-          message: 'Error ocurred while creating match'
+          message: 'Error ocurred while creating match' + err
         });
       }
       oponent.matchId = newMatch.id;

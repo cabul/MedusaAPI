@@ -26,6 +26,7 @@ exports.dbdisplay = function(req, res) {
       } else {
         matches.forEach(function(match) {
           display += JSON.stringify(match) + '\n';
+          console.log(match.players['545d2184c4533d9812c7ea37']);
         });
       }
       res.send(display);
