@@ -16,14 +16,14 @@ var setMatch = function(err, oponent, ticket, res) {
         name: oponent.name,
         elo: oponent.elo,
         ticket: oponent.id,
-        player_index: 0,
-        last_seen_turn: 0
+        playerIndex: 0,
+        lastSeenTurn: 0
       }, {
         name: ticket.name,
         elo: ticket.elo,
         ticket: ticket.id,
-        player_index: 1,
-        last_seen_turn: 0
+        playerIndex: 1,
+        lastSeenTurn: 0
       }],
       init_date: new Date(),
       turns: []
