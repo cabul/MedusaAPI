@@ -39,14 +39,6 @@ exports.requestMatch = function(req, res) {
               message: 'Error retrieving match ' + ticket.matchId
             });
 
-          match.status = 'established';
-          match.save(function(err) {
-            if (err)
-              return res.status(500).send({
-                message: 'Error ocurred while updating match status to established'
-              });
-
-          });
           Ticket.findByIdAndRemove(ticket.id, {}, function(err) {
             if (err)
               return res.status(500).send({
@@ -54,8 +46,7 @@ exports.requestMatch = function(req, res) {
               });
             return res.send({
               matchId: match.id,
-              player: req.body.ticketId,
-              nextTurn: 0
+              player: req.body.ticketId
             }); //player: 0 = first player
           });
         });

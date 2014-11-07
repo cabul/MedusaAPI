@@ -4,7 +4,7 @@ var mongoose = require('mongoose'),
   Match = mongoose.model('Match'),
   Ticket = mongoose.model('Ticket');
 
-var _eloratio = api.elo_ratio?api.elo_ratio:0.5;
+var _eloratio = 0.3;
 
 var setMatch = function(err, oponent, ticket, res) {
   if (err) return res.status(500).send({
@@ -16,16 +16,17 @@ var setMatch = function(err, oponent, ticket, res) {
         name: oponent.name,
         elo: oponent.elo,
         ticket: oponent.id,
-        submitTurn: true
+        player_index: 0,
+        last_seen_turn: 0
       }, {
         name: ticket.name,
         elo: ticket.elo,
         ticket: ticket.id,
-        submitTurn: false
+        player_index: 1,
+        last_seen_turn: 0
       }],
       init_date: new Date(),
-      turns: [],
-      status: 'not established'
+      turns: []
     });
     newMatch.save(function(err) {
       if (err) {
@@ -48,8 +49,7 @@ var setMatch = function(err, oponent, ticket, res) {
           });
           return res.send({
             matchId: newMatch.id,
-            player: ticketId,
-            nextTurn: 1
+            player: ticketId
           }); //player: 1 = second player 
         });
       });
