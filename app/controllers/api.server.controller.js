@@ -73,12 +73,12 @@ exports.waitTurn = function(req, res) {
       });
     if (match) {
       var turn_player = (match.turns.length % 2 === 0) ? 0 : 1;
-      if (match.players[turn_player].ticket !== player) {
+      if (parseInt(match.players[turn_player].ticket) !== parseInt(player)) {
         var last_turn = match.turns.length;
-        if (last_turn == nextTurn) { //Aquí la diferencia entre doble y "triple =" sí importa
-          match.players[turn_player].submitTurn = true;
+       // if (parseInt(last_turn) === parseInt(nextTurn)) { //Aquí la diferencia entre doble y "triple =" sí importa
+          //match.players[turn_player].submitTurn = true;
           //submitTurn: true--> Le toca el turno
-          match.save(function(err) {
+         /* match.save(function(err) {
             if (err)
               return res.status(500).send({
                 message: 'Error ocurred while updating match with id = ' + match.id
@@ -87,12 +87,15 @@ exports.waitTurn = function(req, res) {
               message: 'It is your turn, submit turn',
               last_turn: match.turns[match.turns.length-1]
             });
-          });
-
-        } else {
+          });*/
+        return res.send({
+              message: 'It is your turn, submit turn',
+              last_turn: match.turns[match.turns.length-1]
+            });
+       /* } else {
           //submitTurn: false--> Sigue en espera 
-          return res.send('Waiting ...' + "nextTurn: " + nextTurn + "; lasTurn: " + last_turn);
-        }
+          return res.send('Waiting ...' + 'nextTurn: ' + nextTurn + '; lasTurn: ' + last_turn);
+        }*/
       } else {
         return res.send({
           message: 'It is your turn, submit turn',
@@ -155,6 +158,29 @@ exports.submitTurn = function(req, res) {
 
   });
 
+};
+
+
+exports.players = function(req,res){
+  Match.findById(req.body.matchId)
+  .sort('player_index').exec(function (err, match){
+    if(err)
+       return res.status(500).send({
+        message: 'Error ocurred while looking for match with id = ' + req.body.matchId
+      });
+    if(match){
+      var players_list='';
+      var players = match.players;
+      var who;
+      players.forEach(function(player){
+        who = (player.ticket === req.body.ticketId)?'Yourself':'Adversary';
+        players_list += who+' '+ parseInt(player.player_index+1)+' --> name :'+player.name+' elo: '+player.elo+'\n';
+      });
+     return res.send(players_list);
+     }else{
+        return res.status(400).send('Error retrieving match '+ req.body.matchId);
+     }
+  });
 };
 
 exports.getMatchStatus = function(req, res) {

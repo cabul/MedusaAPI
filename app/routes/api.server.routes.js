@@ -8,6 +8,7 @@ module.exports = function(app) {
 	app.route('/api/requestMatch').post(api.requestMatch);
 	app.route('/api/waitTurn').post(api.waitTurn);
 	app.route('/api/submitTurn').post(api.submitTurn);
+  app.route('/api/players').post(api.players);
 	app.route('/api/getMatchStatus').post(api.getMatchStatus);
 	app.route('/api/setMatchStatus').post(api.setMatchStatus);
 };
