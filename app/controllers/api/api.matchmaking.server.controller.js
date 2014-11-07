@@ -17,13 +17,15 @@ var setMatch = function(err, oponent, ticket, res) {
         elo: oponent.elo,
         ticket: oponent.id,
         playerIndex: 0,
-        lastSeenTurn: 0
+        lastSeenTurn: 0,
+        active: true
       }, {
         name: ticket.name,
         elo: ticket.elo,
         ticket: ticket.id,
         playerIndex: 1,
-        lastSeenTurn: 0
+        lastSeenTurn: 0,
+        active: true
       }],
       init_date: new Date(),
       turns: []

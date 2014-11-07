@@ -80,7 +80,7 @@ exports.players = function(req,res){
         who = (player.ticket === req.body.ticketId)?'Yourself':'Adversary';
         players_list += who+' '+ parseInt(player.player_index+1)+' --> name :'+player.name+' elo: '+player.elo+'\n';
       });
-     return res.send(players_list);
+     return res.status(201).send(players_list);
      }else{
         return res.status(400).send('Error retrieving match '+ req.body.matchId);
      }
@@ -89,7 +89,31 @@ exports.players = function(req,res){
 
 
 exports.retire = function(req, res){
-  
+  Match.findById(req.body.matchId, function(err, match){
+    if(err)
+       return res.status(500).send({
+        message: 'Error ocurred while looking for match with id = ' + req.body.matchId
+      });
+     var players = match.players;
+     if(players){
+       players.forEach(function(player){
+        if(player.ticket === req.body.ticketId){
+          player.active = false;
+          match.save(function(err){
+            if(err)
+              return res.status(500).send({
+                 message: 'Error updating user '+ req.body.ticketId+'  state'
+               });
+            return res.status(201).send('You have abandon the game');
+          });
+        }
+      });
+     }else{
+       return res.status(500).send({
+        message: 'There are no players for match with id = ' + req.body.matchId
+      });
+     }
+  });
 };
 
 /*
