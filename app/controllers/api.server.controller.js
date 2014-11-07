@@ -67,7 +67,7 @@ exports.match = function(req, res) {
 
 exports.players = function(req,res){
   Match.findById(req.body.matchId)
-  .sort('player_index').exec(function (err, match){
+  .sort('playerIndex').exec(function (err, match){
     if(err)
        return res.status(500).send({
         message: 'Error ocurred while looking for match with id = ' + req.body.matchId
@@ -78,7 +78,7 @@ exports.players = function(req,res){
       var who;
       players.forEach(function(player){
         who = (player.ticket === req.body.player)?'Yourself':'Adversary';
-        players_list += who+' '+ parseInt(player.player_index+1)+' --> name :'+player.name+' elo: '+player.elo+'\n';
+        players_list += who+' '+ parseInt(player.playerIndex+1)+' --> name :'+player.name+' elo: '+player.elo+'\n';
       });
      return res.status(201).send(players_list);
      }else{
