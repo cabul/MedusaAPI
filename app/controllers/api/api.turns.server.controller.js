@@ -73,8 +73,6 @@ exports.submit = function(req, res) {
       var turn_player = (match.turns.length % 2 === 0) ? 0 : 1;
       if (match.players[turn_player].ticket === player) {
         match.turns.push(turn);
-        // submitTurn: false--> Ahora le tocará esperar por el próximo turno
-        match.players[turn_player].submitTurn = false;
         match.save(function(err) {
           if (err)
             return res.status(500).send({

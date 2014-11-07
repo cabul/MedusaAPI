@@ -77,7 +77,7 @@ exports.players = function(req,res){
       var players = match.players;
       var who;
       players.forEach(function(player){
-        who = (player.ticket === req.body.ticketId)?'Yourself':'Adversary';
+        who = (player.ticket === req.body.player)?'Yourself':'Adversary';
         players_list += who+' '+ parseInt(player.player_index+1)+' --> name :'+player.name+' elo: '+player.elo+'\n';
       });
      return res.status(201).send(players_list);
@@ -97,12 +97,12 @@ exports.retire = function(req, res){
      var players = match.players;
      if(players){
        players.forEach(function(player){
-        if(player.ticket === req.body.ticketId){
+        if(player.ticket === req.body.player){
           player.active = false;
           match.save(function(err){
             if(err)
               return res.status(500).send({
-                 message: 'Error updating user '+ req.body.ticketId+'  state'
+                 message: 'Error updating user '+ req.body.player+'  state'
                });
             return res.status(201).send('You have abandon the game');
           });
