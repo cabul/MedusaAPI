@@ -41,7 +41,7 @@ var turnsNotSeen = function(match, thisPlayer, yourTurn, res){
 };
 
 
-var inactivePlayers = function(match, thisPlayer, turn_player, turns, res){
+var inactivePlayers = function(match, thisPlayer, turn_player, res){
   var i = turn_player;
   var yourTurn = false;
   var loop = function(i){
@@ -79,7 +79,7 @@ exports.wait = function(req, res) {
           if (match.players[turn_player].ticket !== playerId) { //If is not player's turn
             turnsNotSeen(match, thisPlayer, true, res);
           }else{
-             inactivePlayers (match, thisPlayer, turn_player, [], res);
+             inactivePlayers (match, thisPlayer, turn_player, res);
           }
          
 
