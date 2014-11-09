@@ -116,6 +116,16 @@ exports.retire = function(req, res){
   });
 };
 
+exports.turns = function(req, res){
+  Match.findById(req.body.matchId, 'turns', function (err, turns){
+    if(err){
+      return res.status(500).send({
+        message: 'Error retrieving match ' + req.body.matchId
+      });
+    }
+    return res.status(201).send(turns);
+  });
+};
 /*
 =======OBSOLETE========
 >>>>>>> a17b799c10461d96e20db043e7c78614076f3422

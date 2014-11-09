@@ -15,7 +15,9 @@ var turnsNotSeen = function(match, thisPlayer, yourTurn, res){
       loop(parseInt(i+1));
       
     } else {
+    
       match.players[thisPlayer.playerIndex].lastSeenTurn = parseInt(match.turns.length-1);
+      match.markModified('players');
       match.save(function(err){
         if (err)
             return res.status(500).send({
