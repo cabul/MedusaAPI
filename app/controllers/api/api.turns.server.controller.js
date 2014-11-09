@@ -12,26 +12,27 @@ var turnsNotSeen = function(match, thisPlayer, yourTurn, res){
   var loop = function(i){
     if(i < match.turns.length){
       turns_not_seen.push(match.turns[i]);
-      match.players[thisPlayer.playerIndex].lastSeenTurn += parseInt(1);
+      loop(parseInt(i+1));
+      
+    } else {
+      match.players[thisPlayer.playerIndex].lastSeenTurn = parseInt(match.turns.length-1);
       match.save(function(err){
         if (err)
             return res.status(500).send({
               message: 'Error ocurred while looking for turns'
             });
-        loop(parseInt(i+1));
-      });
-    } else {
-      if(yourTurn){
-        return res.status(201).send({
+        if(yourTurn){
+          return res.status(201).send({
                     message: 'It is your turn, submit turn',
                     turns: turns_not_seen
                   });      
-      }else{
-        return res.status(201).send({
+        }else{
+          return res.status(201).send({
                     message: 'Wait...',
                     turns: turns_not_seen
                   });    
-      }
+        }
+      }); 
     }
   };
   loop(i);
@@ -112,7 +113,6 @@ exports.submit = function(req, res) {
             return res.status(500).send({
               message: 'Error ocurred while submiting new turn'
             });
-          //var newTurn = match.turns.length + 1;
           res.status(201).send('Turn submited');
         });
 
