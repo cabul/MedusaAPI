@@ -2,50 +2,83 @@
 
 var mongoose = require('mongoose'),
   errorHandler = require('../errors'),
+  async = require('async'),
   Match = mongoose.model('Match'),
   Ticket = mongoose.model('Ticket');
+
+var turnsNotSeen = function(match, thisPlayer, yourTurn, res){
+  var i = thisPlayer.lastSeenTurn;
+  var turns_not_seen = [];
+  var loop = function(i){
+    if(i < match.turns.length){
+      turns_not_seen.push(match.turns[i]);
+      match.players[thisPlayer.playerIndex].lastSeenTurn += parseInt(1);
+      match.save(function(err){
+        if (err)
+            return res.status(500).send({
+              message: 'Error ocurred while looking for turns'
+            });
+        loop(parseInt(i+1));
+      });
+    } else {
+      if(yourTurn){
+        return res.status(201).send({
+                    message: 'It is your turn, submit turn',
+                    turns: turns_not_seen
+                  });      
+      }else{
+        return res.status(201).send({
+                    message: 'Wait...',
+                    turns: turns_not_seen
+                  });    
+      }
+    }
+  };
+  loop(i);
+};
+
+
+var inactivePlayers = function(match, thisPlayer, turn_player, turns, res){
+  var i = turn_player;
+  var yourTurn = false;
+  var loop = function(i){
+    if(i < thisPlayer.playerIndex){
+      yourTurn = (match.players[i].active) ? false : true;
+      loop(i+1);
+    }else{
+      turnsNotSeen(match, thisPlayer, yourTurn, res);
+    }
+  };
+  loop(i);
+};
+
 
 exports.wait = function(req, res) {
   var matchId = req.body.matchId;
   var nextTurn = req.body.nextTurn;
-  var player = req.body.player; //ticketId del usuario
+  var playerId = req.body.player; //ticketId del usuario
+  var thisPlayer;
   Match.findById(matchId, function(err, match) {
     if (err)
       return res.status(500).send({
         message: 'Error ocurred while looking for match with id = ' + matchId
       });
+
     if (match) {
-      var turn_player = (match.turns.length % 2 === 0) ? 0 : 1;
-      var last_turn = match.turns.length;
-      if (match.players[turn_player].ticket !== player) {
-       
-       /* if (last_turn == nextTurn) { //Aquí la diferencia entre doble y "triple =" sí importa
-          match.players[turn_player].submitTurn = true;
-          //submitTurn: true--> Le toca el turno
-          match.save(function(err) {
-            if (err)
-              return res.status(500).send({
-                message: 'Error ocurred while updating match with id = ' + match.id
-              });
-            return res.send({
-              message: 'It is your turn, submit turn',
-              last_turn: match.turns[match.turns.length-1]
-            });
-          });*/
-          return res.send({
-              message: 'It is your turn, submit turn',
-              last_turn: match.turns[match.turns.length-1]
-            });
-        /*} else {
-          //submitTurn: false--> Sigue en espera 
-          return res.send('Waiting ...' + 'nextTurn: ' + nextTurn + '; lasTurn: ' + last_turn);
-        }*/
-      } else {
-        return res.send({
-          message: 'It is your turn, submit turn',
-          last_turn: match.turns[match.turns.length-1]
-        });      
-      }
+         var turn_player = (match.turns.length % 2 === 0) ? 0 : 1;
+         var players = match.players;
+        
+          match.players.forEach(function(player){
+            if(player.ticket === playerId){
+              thisPlayer = player;
+            }
+          });
+          if (match.players[turn_player].ticket !== playerId) { //If is not player's turn
+            turnsNotSeen(match, thisPlayer, true, res);
+          }else{
+             inactivePlayers (match, thisPlayer, turn_player, [], res);
+          }
+         
 
     } else {
       return res.status(400).send({
@@ -58,11 +91,12 @@ exports.wait = function(req, res) {
 
 };
 
+
+
 exports.submit = function(req, res) {
   var matchId = req.body.matchId;
   var turn = req.body.turn;
   var player = req.body.player; //player = ticketId
-  var nextTurn = req.body.nextTurn;
   Match.findById(matchId, function(err, match) {
 
     if (err)
@@ -76,14 +110,10 @@ exports.submit = function(req, res) {
         match.save(function(err) {
           if (err)
             return res.status(500).send({
-              message: 'Error ocurred while submiting saving new turn'
+              message: 'Error ocurred while submiting new turn'
             });
-          var newTurn = match.turns.length + 1;
-          res.send({
-            matchId: matchId,
-            player: player,
-            nextTurn: newTurn
-          });
+          //var newTurn = match.turns.length + 1;
+          res.status(201).send('Turn submited');
         });
 
       } else {
