@@ -9,6 +9,7 @@ var mongoose = require('mongoose'),
 var turnsNotSeen = function(match, thisPlayer, yourTurn, res){
   var i = thisPlayer.lastSeenTurn;
   var turns_not_seen = [];
+  // console.log(yourTurn);
   var loop = function(i){
     if(i < match.turns.length){
       turns_not_seen.push(match.turns[i]);
@@ -30,6 +31,7 @@ var turnsNotSeen = function(match, thisPlayer, yourTurn, res){
                   });      
         }else{
           return res.status(201).send({
+                    match: match,
                     message: 'Wait...',
                     turns: turns_not_seen
                   });    
@@ -45,6 +47,7 @@ var inactivePlayers = function(match, thisPlayer, turn_player, res){
   var i = turn_player;
   var yourTurn = false;
   var loop = function(i){
+    console.log(match.players);
     if(i < thisPlayer.playerIndex){
       yourTurn = (match.players[i].active) ? false : true;
       if(yourTurn === true){
@@ -54,14 +57,22 @@ var inactivePlayers = function(match, thisPlayer, turn_player, res){
             return res.status(500).send({
               message: 'Error ocurred while looking for turns'
             });
-            loop(i+1);
+            loop(parseInt(i+1));
         }); 
 
       } else {
          loop(i+1);
       }
-
-    }else{
+    } else if(i > thisPlayer.playerIndex){
+       if(i < match.turns.length - 1){
+         yourTurn = (match.players[i].active) ? false : true;
+         if(!yourTurn) turnsNotSeen(match, thisPlayer, yourTurn, res);
+         loop(parseInt(i+1));
+       } else{
+          i = 0;
+          loop(i);
+       }
+    } else {
        turnsNotSeen(match, thisPlayer, yourTurn, res);
     }
   };
