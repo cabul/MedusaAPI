@@ -99,6 +99,7 @@ exports.retire = function(req, res){
        players.forEach(function(player){
         if(player.ticket === req.body.player){
           player.active = false;
+          match.markModified('players');
           match.save(function(err){
             if(err)
               return res.status(500).send({
