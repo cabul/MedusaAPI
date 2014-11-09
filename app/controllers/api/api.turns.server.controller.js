@@ -47,9 +47,22 @@ var inactivePlayers = function(match, thisPlayer, turn_player, res){
   var loop = function(i){
     if(i < thisPlayer.playerIndex){
       yourTurn = (match.players[i].active) ? false : true;
-      loop(i+1);
+      if(yourTurn === false){
+        match.turns.push(null);
+        match.save(function(err){
+        if (err)
+            return res.status(500).send({
+              message: 'Error ocurred while looking for turns'
+            });
+            loop(i+1);
+        }); 
+
+      } else {
+         loop(i+1);
+      }
+
     }else{
-      turnsNotSeen(match, thisPlayer, yourTurn, res);
+       turnsNotSeen(match, thisPlayer, yourTurn, res);
     }
   };
   loop(i);
