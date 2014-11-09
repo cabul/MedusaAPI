@@ -89,7 +89,7 @@ exports.wait = function(req, res) {
               thisPlayer = player;
             }
           });
-          if (match.players[turn_player].ticket !== playerId) { //If is not player's turn
+          if (match.players[turn_player].ticket !== playerId) { //If it's not player's turn
             inactivePlayers (match, thisPlayer, turn_player, res);
           }else{
              turnsNotSeen(match, thisPlayer, true, res);
