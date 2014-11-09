@@ -47,7 +47,7 @@ var inactivePlayers = function(match, thisPlayer, turn_player, res){
   var loop = function(i){
     if(i < thisPlayer.playerIndex){
       yourTurn = (match.players[i].active) ? false : true;
-      if(yourTurn === false){
+      if(yourTurn === true){
         match.turns.push(null);
         match.save(function(err){
         if (err)
