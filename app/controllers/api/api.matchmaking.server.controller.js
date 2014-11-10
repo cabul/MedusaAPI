@@ -12,13 +12,13 @@ var setMatch = function(err, oponent, ticket, res) {
   });
   if (oponent) {
     var playersArray = {}
-    playersArray[String(ticket.id)] = {
+    playersArray[ticket.id] = {
       name: oponent.name,
       elo: oponent.elo,
       playerIndex: 0,
       lastSeenTurn: 0
     };
-    playersArray[String(oponent.id)] = {
+    playersArray[oponent.id] = {
       name: ticket.name,
       elo: ticket.elo,
       playerIndex: 1,
@@ -29,8 +29,6 @@ var setMatch = function(err, oponent, ticket, res) {
       init_date: new Date(),
       turns: []
     });
-    console.log(newMatch.players);
-    //eval("newMatch.players = "+playersArray);
     newMatch.save(function(err) {
       if (err) {
         console.log('Could not create new match');
