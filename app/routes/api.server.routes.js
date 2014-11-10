@@ -11,6 +11,7 @@ module.exports = function(app) {
 	app.route('/api/submit').post(turns.submit);
 	app.route('/api/players').post(api.players);
 	app.route('/api/retire').post(api.retire);
+  app.route('/api/turns').post(api.turns);
 	//app.route('/api/getMatchStatus').post(api.getMatchStatus);
 	//app.route('/api/setMatchStatus').post(api.setMatchStatus);
 };
