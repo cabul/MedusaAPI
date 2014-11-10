@@ -16,9 +16,10 @@ exports.wait = function(req, res) {
       });
     if (match) {
       var turn_player = (match.turns.length % 2 === 0) ? 0 : 1;
+      var last_turn = match.turns.length;
       if (match.players[turn_player].ticket !== player) {
-        var last_turn = match.turns.length;
-        if (last_turn == nextTurn) { //Aquí la diferencia entre doble y "triple =" sí importa
+       
+       /* if (last_turn == nextTurn) { //Aquí la diferencia entre doble y "triple =" sí importa
           match.players[turn_player].submitTurn = true;
           //submitTurn: true--> Le toca el turno
           match.save(function(err) {
@@ -30,12 +31,15 @@ exports.wait = function(req, res) {
               message: 'It is your turn, submit turn',
               last_turn: match.turns[match.turns.length-1]
             });
-          });
-
-        } else {
+          });*/
+          return res.send({
+              message: 'It is your turn, submit turn',
+              last_turn: match.turns[match.turns.length-1]
+            });
+        /*} else {
           //submitTurn: false--> Sigue en espera 
-          return res.send('Waiting ...' + "nextTurn: " + nextTurn + "; lasTurn: " + last_turn);
-        }
+          return res.send('Waiting ...' + 'nextTurn: ' + nextTurn + '; lasTurn: ' + last_turn);
+        }*/
       } else {
         return res.send({
           message: 'It is your turn, submit turn',
@@ -69,8 +73,6 @@ exports.submit = function(req, res) {
       var turn_player = (match.turns.length % 2 === 0) ? 0 : 1;
       if (match.players[turn_player].ticket === player) {
         match.turns.push(turn);
-        // submitTurn: false--> Ahora le tocará esperar por el próximo turno
-        match.players[turn_player].submitTurn = false;
         match.save(function(err) {
           if (err)
             return res.status(500).send({

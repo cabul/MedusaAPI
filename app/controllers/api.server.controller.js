@@ -64,17 +64,61 @@ exports.match = function(req, res) {
 
 
 
-exports.players = function(req, res){
-  Match.findOneById({matchId : req.body.matchId}, function (err, match){
 
+exports.players = function(req,res){
+  Match.findById(req.body.matchId)
+  .sort('playerIndex').exec(function (err, match){
+    if(err)
+       return res.status(500).send({
+        message: 'Error ocurred while looking for match with id = ' + req.body.matchId
+      });
+    if(match){
+      var players_list='';
+      var players = match.players;
+      var who;
+      players.forEach(function(player){
+        who = (player.ticket === req.body.player)?'Yourself':'Adversary';
+        players_list += who+' '+ parseInt(player.playerIndex+1)+' --> name :'+player.name+' elo: '+player.elo+'\n';
+      });
+     return res.status(201).send(players_list);
+     }else{
+        return res.status(400).send('Error retrieving match '+ req.body.matchId);
+     }
   });
 };
 
+
 exports.retire = function(req, res){
-  
+  Match.findById(req.body.matchId, function(err, match){
+    if(err)
+       return res.status(500).send({
+        message: 'Error ocurred while looking for match with id = ' + req.body.matchId
+      });
+     var players = match.players;
+     if(players){
+       players.forEach(function(player){
+        if(player.ticket === req.body.player){
+          player.active = false;
+          match.save(function(err){
+            if(err)
+              return res.status(500).send({
+                 message: 'Error updating user '+ req.body.player+'  state'
+               });
+            return res.status(201).send('You have abandon the game');
+          });
+        }
+      });
+     }else{
+       return res.status(500).send({
+        message: 'There are no players for match with id = ' + req.body.matchId
+      });
+     }
+  });
 };
+
 /*
 =======OBSOLETE========
+>>>>>>> a17b799c10461d96e20db043e7c78614076f3422
 exports.getMatchStatus = function(req, res) {
   Match.findById(req.body.matchId, 'status', function(err, match_status) {
     if (!match_status)

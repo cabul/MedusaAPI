@@ -7,7 +7,7 @@ var mongoose = require('mongoose'),
 	 Schema = mongoose.Schema;
 
 var matchSchema = new Schema({
-	players: Object,
+	players: {},
 	init_date: Date,
 	turns: Array
 });

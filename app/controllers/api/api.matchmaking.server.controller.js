@@ -11,7 +11,7 @@ var setMatch = function(err, oponent, ticket, res) {
     message: 'Could not processed request'
   });
   if (oponent) {
-    var playersArray = [];
+    var playersArray = {}
     playersArray[String(ticket.id)] = {
       name: oponent.name,
       elo: oponent.elo,
@@ -24,12 +24,13 @@ var setMatch = function(err, oponent, ticket, res) {
       playerIndex: 1,
       lastSeenTurn: 0
     };
-    console.log(playersArray);
     var newMatch = new Match({
       players: playersArray,
       init_date: new Date(),
       turns: []
     });
+    console.log(newMatch.players);
+    //eval("newMatch.players = "+playersArray);
     newMatch.save(function(err) {
       if (err) {
         console.log('Could not create new match');
