@@ -6,10 +6,11 @@ var mongoose = require('mongoose'),
   Match = mongoose.model('Match'),
   Ticket = mongoose.model('Ticket');
 
+
+
 var turnsNotSeen = function(match, thisPlayer, yourTurn, res){
-  var i = thisPlayer.lastSeenTurn;
+  var i = match.players[thisPlayer].lastSeenTurn;
   var turns_not_seen = [];
-  // console.log(yourTurn);
   var loop = function(i){
     if(i < match.turns.length){
       turns_not_seen.push(match.turns[i]);
@@ -17,7 +18,7 @@ var turnsNotSeen = function(match, thisPlayer, yourTurn, res){
       
     } else {
     
-      match.players[thisPlayer.playerIndex].lastSeenTurn = parseInt(match.turns.length-1);
+      match.players[thisPlayer].lastSeenTurn = parseInt(match.turns.length-1);
       match.markModified('players');
       match.save(function(err){
         if (err)
@@ -31,7 +32,6 @@ var turnsNotSeen = function(match, thisPlayer, yourTurn, res){
                   });      
         }else{
           return res.status(201).send({
-                    match: match,
                     message: 'Wait...',
                     turns: turns_not_seen
                   });    
@@ -42,48 +42,68 @@ var turnsNotSeen = function(match, thisPlayer, yourTurn, res){
   loop(i);
 };
 
+var turnsBeforePlayer = function(match, turn_player, thisPlayer, res){
+  var yourTurn = false;
+  var turnBeforePlayer = false;
+  for(var key in match.players){
+    if(parseInt(match.players[key].playerIndex) === parseInt(match.players[thisPlayer].playerIndex)){
+      turnsNotSeen(match, thisPlayer, yourTurn, res);
+    
+    }else{
+      turnBeforePlayer = (parseInt(match.players[key].playerIndex) === parseInt(turn_player)) ? true : false; 
+        if(turnBeforePlayer){
+          yourTurn = (match.players[key].active) ? false : true;
+        }
+      }     
+  }
+
+};
+
+var turnAfterPlayer = function(match, turn_player, thisPlayer, res){
+    var yourTurn = false;
+    var activeBeforePlayer = false;
+    var foundThisPlayer = false;
+    var i = match.turns.length ;
+    var loop = function(i){
+      for(var key in match.players){
+        if(!foundThisPlayer){ //Primero busca los anteriores al player, si encuentra uno activo antes que él devuelve yourTurn=false
+          activeBeforePlayer = (match.players[key].active) ? true : false;
+            if(activeBeforePlayer) return turnsNotSeen(match, thisPlayer, false, res); //yourTurn = false
+              foundThisPlayer = (parseInt(match.players[key].playerIndex) === parseInt(match.players[thisPlayer].playerIndex)) ? true : false;
+              i -= parseInt(1);
+
+        }else{ //Busca players inactivos después de él
+          if(parseInt(i) < match.turns.length){
+            yourTurn = (match.players[key].active) ? false : true;
+            i -= parseInt(1);
+          } else {
+             return turnsNotSeen(match, thisPlayer, yourTurn, res);
+          }
+        }
+      }
+   };
+   loop(i);
+};
+
 
 var inactivePlayers = function(match, thisPlayer, turn_player, res){
   var i = turn_player;
-  var yourTurn = false;
-  var loop = function(i){
-    console.log(match.players);
-    if(i < thisPlayer.playerIndex){
-      yourTurn = (match.players[i].active) ? false : true;
-      if(yourTurn === true){
-        match.turns.push(null);
-        match.save(function(err){
-        if (err)
-            return res.status(500).send({
-              message: 'Error ocurred while looking for turns'
-            });
-            loop(parseInt(i+1));
-        }); 
 
-      } else {
-         loop(i+1);
-      }
-    } else if(i > thisPlayer.playerIndex){
-       if(i < match.turns.length - 1){
-         yourTurn = (match.players[i].active) ? false : true;
-         if(!yourTurn) turnsNotSeen(match, thisPlayer, yourTurn, res);
-         loop(parseInt(i+1));
-       } else{
-          i = 0;
-          loop(i);
-       }
-    } else {
-       turnsNotSeen(match, thisPlayer, yourTurn, res);
-    }
-  };
-  loop(i);
+  if(turn_player < match.players[thisPlayer].playerIndex){
+    turnsBeforePlayer(match, turn_player, thisPlayer, res); 
+
+  }else{
+     turnAfterPlayer(match, turn_player, thisPlayer, res);     
+  }
 };
+
+
 
 
 exports.wait = function(req, res) {
   var matchId = req.body.matchId;
   var nextTurn = req.body.nextTurn;
-  var playerId = req.body.player; //ticketId del usuario
+  var player = req.body.player; //ticketId del usuario
   var thisPlayer;
   Match.findById(matchId, function(err, match) {
     if (err)
@@ -95,15 +115,11 @@ exports.wait = function(req, res) {
          var turn_player = (match.turns.length % 2 === 0) ? 0 : 1;
          var players = match.players;
         
-          match.players.forEach(function(player){
-            if(player.ticket === playerId){
-              thisPlayer = player;
-            }
-          });
-          if (match.players[turn_player].ticket !== playerId) { //If it's not player's turn
-            inactivePlayers (match, thisPlayer, turn_player, res);
+        
+          if (parseInt(match.players[player].playerIndex) !== parseInt(turn_player)) { //If it's not player's turn
+            inactivePlayers (match, player, turn_player, res);
           }else{
-             turnsNotSeen(match, thisPlayer, true, res);
+             turnsNotSeen(match, player, true, res); //I's player's turn
           }
          
 
@@ -132,7 +148,7 @@ exports.submit = function(req, res) {
       });
     if (match) {
       var turn_player = (match.turns.length % 2 === 0) ? 0 : 1;
-      if (match.players[turn_player].ticket === player) {
+      if (match.players[player].playerIndex === turn_player) {
         match.turns.push(turn);
         match.save(function(err) {
           if (err)

@@ -11,18 +11,20 @@ var setMatch = function(err, oponent, ticket, res) {
     message: 'Could not processed request'
   });
   if (oponent) {
-    var playersArray = {}
+    var playersArray = {};
     playersArray[ticket.id] = {
       name: oponent.name,
       elo: oponent.elo,
       playerIndex: 0,
-      lastSeenTurn: 0
+      lastSeenTurn: 0,
+      active: true
     };
     playersArray[oponent.id] = {
       name: ticket.name,
       elo: ticket.elo,
       playerIndex: 1,
-      lastSeenTurn: 0
+      lastSeenTurn: 0,
+      active: true
     };
     var newMatch = new Match({
       players: playersArray,
