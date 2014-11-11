@@ -76,8 +76,10 @@ exports.players = function(req,res){
       var players_list='';
       var players = match.players;
       var who;
-      players.forEach(function(player){
-        who = (player.ticket === req.body.player)?'Yourself':'Adversary';
+      var playerIds = Object.keys(match.players);
+      playerIds.forEach(function(playerId){
+        var player = match.players[playerId];
+        who = (playerId === req.body.player)?'Yourself':'Adversary';
         players_list += who+' '+ parseInt(player.playerIndex+1)+' --> name :'+player.name+' elo: '+player.elo+'\n';
       });
      return res.status(201).send(players_list);
