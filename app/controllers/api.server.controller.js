@@ -32,13 +32,11 @@ exports.match = function(req, res) { //(playerId)
       });
     if (ticket) {
       if (ticket.matchId) { //This ticket has an associated match
-
         Match.findById(ticket.matchId, function(err, match) {
           if (!match)
             return res.status(500).send({
               message: 'Error retrieving match ' + ticket.matchId
             });
-
           Ticket.findByIdAndRemove(ticket.id, {}, function(err) {
             if (err)
               return res.status(500).send({
@@ -50,7 +48,6 @@ exports.match = function(req, res) { //(playerId)
             }); //player: 0 = first player
           });
         });
-
       } else { //This ticket has no associated match yet 
         findMatch(ticket, res);
       }
@@ -95,30 +92,29 @@ exports.retire = function(req, res){ //(matchId, playerId)
        return res.status(500).send({
         message: 'Error ocurred while looking for match with id = ' + req.body.matchId
       });
-     var players = match.players;
-     if(players){
-       players.forEach(function(player){
-        if(player.ticket === req.body.playerId){
-          player.active = false;
-          match.markModified('players');
-          match.save(function(err){
-            if(err)
-              return res.status(500).send({
-                 message: 'Error updating user '+ req.body.playerId+'  state'
-               });
-            return res.status(201).send('You have abandon the game');
-          });
-        }
-      });
-     }else{
+    if(match.players){
+      var playerIndex = match.players[req.body.playerId].playerIndex;
+      match.activePlayers[playerIndex] = false;
+      match.markModified('activePlayers');
+      match.save(function (err){
+        if (err) 
+          return res.status(500).send({
+            message: 'Could not set player as inactive'
+          });  
+        return res.status(201).send({
+          message : 'you are inactive now'
+        });
+      }); 
+    }else{ 
        return res.status(500).send({
         message: 'There are no players for match with id = ' + req.body.matchId
       });
-     }
+    }
   });
 };
 
 exports.turns = function(req, res){  //(matchId)
+
   Match.findById(req.body.matchId, 'turns', function (err, turns){
     if(err){
       return res.status(500).send({
