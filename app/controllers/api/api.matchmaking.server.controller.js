@@ -6,7 +6,7 @@ var mongoose = require('mongoose'),
 
 var _eloratio = 0.3;
 
-var setMatch = function(err, oponent, ticket, res) {
+var setMatch = function(err, oponent, ticket, res) { 
   if (err) return res.status(500).send({
     message: 'Could not processed request'
   });
@@ -93,7 +93,7 @@ var hasElo = function(ticket) {
   return (ticket.elo > 0);
 };
 
-module.exports = function(ticket, res) {
+module.exports = function(ticket, res) { //(ticket)
   if (hasElo(ticket)) eloPair(ticket, res);
   else {
     fifoPair(ticket, res);

@@ -13,11 +13,11 @@ var turnsNotSeen = function(match, thisPlayer, yourTurn, res){
   var loop = function(i){
     if(i < match.turns.length){
       turns_not_seen.push(match.turns[i]);
-      loop(parseInt(i+1));
+      loop(parseInt(i)+1);
       
     } else {
     
-      match.players[thisPlayer.playerIndex].lastSeenTurn = parseInt(match.turns.length-1);
+      match.players[thisPlayer.playerIndex].lastSeenTurn = parseInt(match.turns.length)-1;
       match.markModified('players');
       match.save(function(err){
         if (err)
@@ -31,7 +31,7 @@ var turnsNotSeen = function(match, thisPlayer, yourTurn, res){
                   });      
         }else{
           return res.status(201).send({
-                    match: match,
+                    matchId: match.id,
                     message: 'Wait...',
                     turns: turns_not_seen
                   });    
@@ -48,9 +48,9 @@ var inactivePlayers = function(match, thisPlayer, turn_player, res){
   var yourTurn = false;
   var loop = function(i){
     console.log(match.players);
+    var yourTurn = !match.players[i].active;
     if(i < thisPlayer.playerIndex){
-      yourTurn = (match.players[i].active) ? false : true;
-      if(yourTurn === true){
+      if(yourTurn){
         match.turns.push(null);
         match.save(function(err){
         if (err)
@@ -65,7 +65,6 @@ var inactivePlayers = function(match, thisPlayer, turn_player, res){
       }
     } else if(i > thisPlayer.playerIndex){
        if(i < match.turns.length - 1){
-         yourTurn = (match.players[i].active) ? false : true;
          if(!yourTurn) turnsNotSeen(match, thisPlayer, yourTurn, res);
          loop(parseInt(i+1));
        } else{
@@ -81,9 +80,7 @@ var inactivePlayers = function(match, thisPlayer, turn_player, res){
 
 
 exports.wait = function(req, res) {
-  var matchId = req.body.matchId;
-  var nextTurn = req.body.nextTurn;
-  var playerId = req.body.player; //ticketId del usuario
+  var matchId = req.body.matchId; //(matchId, playerId)
   var thisPlayer;
   Match.findById(matchId, function(err, match) {
     if (err)
@@ -92,20 +89,18 @@ exports.wait = function(req, res) {
       });
 
     if (match) {
-         var turn_player = (match.turns.length % 2 === 0) ? 0 : 1;
-         var players = match.players;
-        
-          match.players.forEach(function(player){
-            if(player.ticket === playerId){
-              thisPlayer = player;
-            }
-          });
-          if (match.players[turn_player].ticket !== playerId) { //If it's not player's turn
-            inactivePlayers (match, thisPlayer, turn_player, res);
-          }else{
-             turnsNotSeen(match, thisPlayer, true, res);
-          }
-         
+      var turn_player = match.turns.length % 2;
+      Object.keys(match.players).forEach(function(playerId){   //for playerId of match.players
+        if(req.body.playerId === playerId){
+          thisPlayer = match.players[playerId];                //useless block?
+        }
+      });
+      if (Object.keys(match.players)[turn_player] !== req.body.playerId) { //If it's not player's turn
+        inactivePlayers (match, thisPlayer, turn_player, res);
+      }else{
+         turnsNotSeen(match, thisPlayer, true, res);
+      }
+     
 
     } else {
       return res.status(400).send({
@@ -120,10 +115,10 @@ exports.wait = function(req, res) {
 
 
 
-exports.submit = function(req, res) {
+exports.submit = function(req, res) { //(matchId, Turn, playerId)
   var matchId = req.body.matchId;
   var turn = req.body.turn;
-  var player = req.body.player; //player = ticketId
+  var player = req.body.playerId; //player = ticketId
   Match.findById(matchId, function(err, match) {
 
     if (err)

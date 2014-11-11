@@ -7,7 +7,7 @@ var mongoose = require('mongoose'),
   Ticket = mongoose.model('Ticket');
 //  async = require('async'); 
 
-exports.ticket = function(req, res) {
+exports.ticket = function(req, res) { //(name, elo)
   var newTicket = new Ticket({
     name: req.body.name,
     elo: req.body.elo ? req.body.elo : 0,
@@ -24,8 +24,8 @@ exports.ticket = function(req, res) {
   }); 
 };
 
-exports.match = function(req, res) {
-  Ticket.findById(req.body.ticketId, function(err, ticket) {
+exports.match = function(req, res) { //(playerId)
+  Ticket.findById(req.body.playerId, function(err, ticket) {
     if (err)
       return res.status(500).send({
         message: 'Error retrieving ticket'
@@ -46,7 +46,7 @@ exports.match = function(req, res) {
               });
             return res.send({
               matchId: match.id,
-              player: req.body.ticketId
+              playerId: req.body.playerId
             }); //player: 0 = first player
           });
         });
@@ -65,7 +65,7 @@ exports.match = function(req, res) {
 
 
 
-exports.players = function(req,res){
+exports.players = function(req,res){ //(matchId, playerId?)
   Match.findById(req.body.matchId)
   .sort('playerIndex').exec(function (err, match){
     if(err)
@@ -76,10 +76,9 @@ exports.players = function(req,res){
       var players_list='';
       var players = match.players;
       var who;
-      var playerIds = Object.keys(match.players);
-      playerIds.forEach(function(playerId){
+      Object.keys(match.players).forEach(function(playerId){   //for playerId of match.players
         var player = match.players[playerId];
-        who = (playerId === req.body.player)?'Yourself':'Adversary';
+        who = (playerId === req.body.playerId)?'Yourself':'Adversary';
         players_list += who+' '+ parseInt(player.playerIndex+1)+' --> name :'+player.name+' elo: '+player.elo+'\n';
       });
      return res.status(201).send(players_list);
@@ -90,7 +89,7 @@ exports.players = function(req,res){
 };
 
 
-exports.retire = function(req, res){
+exports.retire = function(req, res){ //(matchId, playerId)
   Match.findById(req.body.matchId, function(err, match){
     if(err)
        return res.status(500).send({
@@ -99,13 +98,13 @@ exports.retire = function(req, res){
      var players = match.players;
      if(players){
        players.forEach(function(player){
-        if(player.ticket === req.body.player){
+        if(player.ticket === req.body.playerId){
           player.active = false;
           match.markModified('players');
           match.save(function(err){
             if(err)
               return res.status(500).send({
-                 message: 'Error updating user '+ req.body.player+'  state'
+                 message: 'Error updating user '+ req.body.playerId+'  state'
                });
             return res.status(201).send('You have abandon the game');
           });
@@ -119,7 +118,7 @@ exports.retire = function(req, res){
   });
 };
 
-exports.turns = function(req, res){
+exports.turns = function(req, res){  //(matchId)
   Match.findById(req.body.matchId, 'turns', function (err, turns){
     if(err){
       return res.status(500).send({
@@ -129,45 +128,3 @@ exports.turns = function(req, res){
     return res.status(201).send(turns);
   });
 };
-/*
-=======OBSOLETE========
->>>>>>> a17b799c10461d96e20db043e7c78614076f3422
-exports.getMatchStatus = function(req, res) {
-  Match.findById(req.body.matchId, 'status', function(err, match_status) {
-    if (!match_status)
-      return res.status(400).send({
-        message: 'There is no match ' + req.body.matchId
-      });
-    if (err)
-      return res.status(500).send({
-        message: 'Error ocurred while looking for match with id = ' + req.body.matchId
-      });
-
-    res.status(201).send(match_status);
-  });
-};
-
-exports.setMatchStatus = function(req, res) {
-  Match.findById(req.body.matchId, function(err, match) {
-    if (err)
-      return res.status(500).send({
-        message: 'Error ocurred while looking for match to update'
-      });
-
-    if (match) {
-      match.status = req.body.status;
-
-      match.save(function(err) {
-        if (err)
-          return res.status(500).send({
-            message: 'Error ocurred while updating match status'
-          });
-
-        res.status(201).send(match);
-      });
-
-    } else {
-      res.status(400).send('ERROR: There is no Match with id = ' + req.body.matchId);
-    }
-  });
-};*/
