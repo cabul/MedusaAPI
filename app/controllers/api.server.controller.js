@@ -76,10 +76,10 @@ exports.players = function(req,res){
       var players_list='';
       var players = match.players;
       var who;
-      players.forEach(function(player){
-        who = (player.ticket === req.body.player)?'Yourself':'Adversary';
-        players_list += who+' '+ parseInt(player.playerIndex+1)+' --> name :'+player.name+' elo: '+player.elo+'\n';
-      });
+      for(var key in players){
+        who = (parseInt(players[key].playerIndex) === parseInt(match.players[req.body.player].playerIndex))?'Yourself':'Adversary';
+        players_list += who+' '+ parseInt(players[key].playerIndex+1)+' --> name :'+players[key].name+' elo: '+players[key].elo+'\n';
+      }
      return res.status(201).send(players_list);
      }else{
         return res.status(400).send('Error retrieving match '+ req.body.matchId);
@@ -96,9 +96,9 @@ exports.retire = function(req, res){
       });
      var players = match.players;
      if(players){
-       players.forEach(function(player){
-        if(player.ticket === req.body.player){
-          player.active = false;
+        for(var key in players){
+          if(parseInt(players[key].playerIndex) === parseInt(match.players[req.body.player].playerIndex)){
+          players[key].active = false;
           match.markModified('players');
           match.save(function(err){
             if(err)
@@ -107,8 +107,8 @@ exports.retire = function(req, res){
                });
             return res.status(201).send('You have abandon the game');
           });
+         }
         }
-      });
      }else{
        return res.status(500).send({
         message: 'There are no players for match with id = ' + req.body.matchId
@@ -116,6 +116,7 @@ exports.retire = function(req, res){
      }
   });
 };
+
 
 exports.turns = function(req, res){
   Match.findById(req.body.matchId, 'turns', function (err, turns){

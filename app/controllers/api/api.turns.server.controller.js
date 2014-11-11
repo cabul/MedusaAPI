@@ -63,7 +63,7 @@ var turnAfterPlayer = function(match, turn_player, thisPlayer, res){
     var yourTurn = false;
     var activeBeforePlayer = false;
     var foundThisPlayer = false;
-    var i = match.turns.length ;
+    var i = match.players.length ;
     var loop = function(i){
       for(var key in match.players){
         if(!foundThisPlayer){ //Primero busca los anteriores al player, si encuentra uno activo antes que él devuelve yourTurn=false
@@ -73,7 +73,7 @@ var turnAfterPlayer = function(match, turn_player, thisPlayer, res){
               i -= parseInt(1);
 
         }else{ //Busca players inactivos después de él
-          if(parseInt(i) < match.turns.length){
+          if(parseInt(i) > 0){
             yourTurn = (match.players[key].active) ? false : true;
             i -= parseInt(1);
           } else {
