@@ -27,7 +27,8 @@ var setMatch = function(err, oponent, ticket, res) {
     var newMatch = new Match({
       players: playersArray,
       init_date: new Date(),
-      turns: []
+      turns: [],
+      activePlayers: [true, true]
     });
     newMatch.save(function(err) {
       if (err) {
@@ -50,7 +51,7 @@ var setMatch = function(err, oponent, ticket, res) {
           });
           return res.send({
             matchId: newMatch.id,
-            player: ticketId
+            playerId: ticketId
           }); //player: 1 = second player 
         });
       });

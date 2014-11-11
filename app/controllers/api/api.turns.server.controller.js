@@ -43,12 +43,23 @@ var turnsNotSeen = function(match, thisPlayer, yourTurn, res){
 };
 
 
-var inactivePlayers = function(match, thisPlayer, turn_player, res){
-  var i = turn_player;
-  var yourTurn = false;
+var inactivePlayers = function(match, thisPlayer, currentTurn, res){
+  var i = currentTurn;
+  while(!match.activePlayers[i]){  //Itera por todos los jugadores inactivos consecutivos que haya
+    match.turns.push(null);
+    i = (i+1)%2;
+  };
+  match.save(function(err){
+    if (err)
+      return res.status(500).send({
+        message: 'Error ocurred while looking for turns'
+      });
+    turnsNotSeen(match, thisPlayer, yourTurn, res);
+  }); 
+/*  var yourTurn = false;
   var loop = function(i){
     console.log(match.players);
-    var yourTurn = !match.players[i].active;
+    var yourTurn = !match.players[i].active; //array de jugadores inactivos para esto podria estar bien
     if(i < thisPlayer.playerIndex){
       if(yourTurn){
         match.turns.push(null);
@@ -75,28 +86,22 @@ var inactivePlayers = function(match, thisPlayer, turn_player, res){
        turnsNotSeen(match, thisPlayer, yourTurn, res);
     }
   };
-  loop(i);
+  loop(i);*/
 };
 
 
 exports.wait = function(req, res) {
   var matchId = req.body.matchId; //(matchId, playerId)
-  var thisPlayer;
   Match.findById(matchId, function(err, match) {
     if (err)
       return res.status(500).send({
         message: 'Error ocurred while looking for match with id = ' + matchId
       });
-
-    if (match) {
-      var turn_player = match.turns.length % 2;
-      Object.keys(match.players).forEach(function(playerId){   //for playerId of match.players
-        if(req.body.playerId === playerId){
-          thisPlayer = match.players[playerId];                //useless block?
-        }
-      });
-      if (Object.keys(match.players)[turn_player] !== req.body.playerId) { //If it's not player's turn
-        inactivePlayers (match, thisPlayer, turn_player, res);
+    if (match) {   
+      var thisPlayer = match.players[req.body.playerId];
+      var currentTurn = match.turns.length % 2;
+      if (thisPlayer.playerIndex !== currentTurn) { //If it's not player's turn
+        inactivePlayers (match, thisPlayer, currentTurn, res);
       }else{
          turnsNotSeen(match, thisPlayer, true, res);
       }
@@ -126,8 +131,8 @@ exports.submit = function(req, res) { //(matchId, Turn, playerId)
         message: 'Error ocurred while looking for match with id = ' + matchId
       });
     if (match) {
-      var turn_player = (match.turns.length % 2 === 0) ? 0 : 1;
-      if (match.players[turn_player].ticket === player) {
+      var currentTurn = match.turns.length % 2;
+      if (match.players[currentTurn].ticket === player) {
         match.turns.push(turn);
         match.save(function(err) {
           if (err)
