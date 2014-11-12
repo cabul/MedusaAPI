@@ -28,7 +28,7 @@ var setMatch = function(err, oponent, ticket, res) {
       players: playersArray,
       init_date: new Date(),
       turns: [],
-      activePlayers: {0: true, 1: true}
+      activePlayers: [true,true]
     });
     newMatch.save(function(err) {
       if (err) {

@@ -8,7 +8,7 @@ var mongoose = require('mongoose'),
 
 
 
-var sendNotSeenTurns = function(match, playerId, res){
+var sendNotSeenTurns = function(match, playerId, yourTurn, res){
   var i = match.players[playerId].lastSeenTurn;
   var turnsNotseen = [];
   while(++i < match.turns.length){
@@ -21,10 +21,17 @@ var sendNotSeenTurns = function(match, playerId, res){
       return res.status(500).send({
         message: 'Error ocurred while looking for turns'
       });
-    return res.status(201).send({
-      message: 'It is your turn, submit turn',
-      turns: turnsNotseen
-    }); 
+    if(yourTurn){
+      return res.status(201).send({
+        message: 'It is your turn, submit turn',
+        turns: turnsNotseen
+      }); 
+    } else {
+      return res.status(201).send({
+        message: 'It is not your turn, wait',
+        turns: turnsNotseen
+      });
+    }
   }); 
 };
 
@@ -33,14 +40,15 @@ var inactivePlayers = function(match, playerId, currentTurn, res){
   var i = currentTurn;
   while(!match.activePlayers[i]){  //Itera por todos los jugadores inactivos consecutivos que haya
     match.turns.push(null);
-    i = (i+1)%2;
+    i = (i+1) % Object.keys(match.players).length;
   };
   match.save(function(err){
     if (err)
       return res.status(500).send({
         message: 'Error ocurred while looking for turns'
       });
-    sendNotSeenTurns(match, playerId, yourTurn, res);
+    var yourTurn = match.players[playerId].playerIndex === match.turns.length % Object.keys(match.players).length;
+    sendNotSeenTurns(match, playerId, yourTurn ,res);
   }); 
 };
 
@@ -53,13 +61,15 @@ exports.wait = function(req, res) { //(matchId, playerId)
       return res.status(500).send({
         message: 'Error ocurred while looking for match with id = ' + matchId
       });
-    if (match) {   
+    if (match) {
       var thisPlayer = match.players[req.body.playerId];
-      var currentTurn = match.turns.length % 2;
+      if (!thisPlayer) return res.status(404).send({message: "player not in match"});
+      var currentTurn = match.turns.length % Object.keys(match.players).length;
       if (thisPlayer.playerIndex !== currentTurn) { //If it's not player's turn
         inactivePlayers(match, req.body.playerId, currentTurn, res);
       }else{ 
-        sendNotSeenTurns (match, req.body.playerId, res);
+         var yourTurn = thisPlayer.playerIndex === currentTurn;
+        sendNotSeenTurns (match, req.body.playerId, yourTurn, res);
       }
     } else {
       return res.status(400).send({
@@ -81,7 +91,8 @@ exports.submit = function(req, res) { //(matchId, Turn, playerId)
         message: 'Error ocurred while looking for match with id = ' + matchId
       });
     if (match) { 
-      var currentTurn = match.turns.length % 2;
+
+      var currentTurn = match.turns.length % Object.keys(match.players).length;
       if (match.players[playerId].playerIndex === currentTurn) {
         match.turns.push(turn);
         match.players[playerId].lastSeenTurn = match.turns.length-1;
