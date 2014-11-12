@@ -75,8 +75,8 @@ exports.players = function(req,res){ //(matchId, playerId?)
       players.push({
         name   : player.name,
         elo    : player.elo,
-        enemy  : (playerId !== me),
-        active : match.activePlayers[playerId],
+        enemy  : (pid !== me),
+        active : match.activePlayers[pid],
         index  : player.playerIndex
       });
     }
