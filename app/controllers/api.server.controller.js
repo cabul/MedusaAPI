@@ -5,7 +5,7 @@ var mongoose = require('mongoose'),
   findMatch = require('./api/api.matchmaking'),
   Match = mongoose.model('Match'),
   Ticket = mongoose.model('Ticket');
-//  async = require('async'); 
+//  async = require('async');
 
 exports.ticket = function(req, res) { //(name, elo)
   var newTicket = new Ticket({
@@ -21,7 +21,7 @@ exports.ticket = function(req, res) { //(name, elo)
       });
     }
     return res.status(201).send(newTicket._id);
-  }); 
+  });
 };
 
 exports.match = function(req, res) { //(playerId)
@@ -48,7 +48,7 @@ exports.match = function(req, res) { //(playerId)
             }); //player: 0 = first player
           });
         });
-      } else { //This ticket has no associated match yet 
+      } else { //This ticket has no associated match yet
         findMatch(ticket, res);
       }
     } else {
@@ -59,29 +59,27 @@ exports.match = function(req, res) { //(playerId)
   });
 };
 
-
-
-
 exports.players = function(req,res){ //(matchId, playerId?)
-  Match.findById(req.body.matchId)
-  .sort('playerIndex').exec(function (err, match){
-    if(err)
-       return res.status(500).send({
-        message: 'Error ocurred while looking for match with id = ' + req.body.matchId
+  var matchId = req.body.matchId,
+      me      = req.body.playerId;
+  if(!matchId) return res.status(400).send({message: 'No matchId set'});
+  Match.findById(req.body.matchId, function (err, match){
+    if(err) return res.status(500).send({
+      message: 'Error ocurred while looking for match with id = ' + matchId
+    });
+    if(!match) return res.status(400).send({message: 'Error retrieving match ' + matchId});
+    var players = [];
+    match.players.forEach(function(player,playerId){
+      players.push({
+        name   : player.name,
+        elo    : player.elo,
+        enemy  : (playerId !== me),
+        active : match.activePlayers[playerId],
+        index  : player.playerIndex
       });
-    if(match){
-      var players_list='';
-      var players = match.players;
-      var who;
-      Object.keys(match.players).forEach(function(playerId){   //for playerId of match.players
-        var player = match.players[playerId];
-        who = (playerId === req.body.playerId)?'Yourself':'Adversary';
-        players_list += who+' '+ parseInt(player.playerIndex+1)+' --> name :'+player.name+' elo: '+player.elo+'\n';
-      });
-     return res.status(201).send(players_list);
-     }else{
-        return res.status(400).send('Error retrieving match '+ req.body.matchId);
-     }
+    });
+    players.sort(function(a,b){ return a.index-b.index; });
+    return res.status(200).send(players);
   });
 };
 
@@ -97,15 +95,15 @@ exports.retire = function(req, res){ //(matchId, playerId)
       match.activePlayers[playerIndex] = false;
       match.markModified('activePlayers');
       match.save(function (err){
-        if (err) 
+        if (err)
           return res.status(500).send({
             message: 'Could not set player as inactive'
-          });  
+          });
         return res.status(201).send({
           message : 'you are inactive now'
         });
-      }); 
-    }else{ 
+      });
+    }else{
        return res.status(500).send({
         message: 'There are no players for match with id = ' + req.body.matchId
       });
