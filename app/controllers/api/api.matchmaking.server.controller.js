@@ -15,13 +15,13 @@ var setMatch = function(err, oponent, ticket, res) {
     playersArray[ticket.id] = {
       name: oponent.name,
       elo: oponent.elo,
-      playerIndex: 0,
+      index: 0,
       lastSeenTurn: 0
     };
     playersArray[oponent.id] = {
       name: ticket.name,
       elo: ticket.elo,
-      playerIndex: 1,
+      index: 1,
       lastSeenTurn: 0
     };
     var newMatch = new Match({
@@ -57,7 +57,7 @@ var setMatch = function(err, oponent, ticket, res) {
       });
     });
   } else {
-    return res.send('Could not find adversary. Please wait for an oponent...');
+    return res.status(400).send({message: 'Could not find adversary. Please wait for an oponent...'});
   }
 };
 

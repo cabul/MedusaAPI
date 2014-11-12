@@ -69,13 +69,13 @@ exports.players = function(req,res){ //(matchId, playerId?)
     });
     if(!match) return res.status(400).send({message: 'Error retrieving match ' + matchId});
     var players = [];
-    match.players.forEach(function(player,playerId){
+    match.players.forEach(function(player,playerId){ //Esto pita!
       players.push({
         name   : player.name,
         elo    : player.elo,
         enemy  : (playerId !== me),
         active : match.activePlayers[playerId],
-        index  : player.playerIndex
+        index  : player.index
       });
     });
     players.sort(function(a,b){ return a.index-b.index; });
@@ -91,15 +91,15 @@ exports.retire = function(req, res){ //(matchId, playerId)
         message: 'Error ocurred while looking for match with id = ' + req.body.matchId
       });
     if(match.players){
-      var playerIndex = match.players[req.body.playerId].playerIndex;
-      match.activePlayers[playerIndex] = false;
+      var index = match.players[req.body.playerId].index;
+      match.activePlayers[index] = false;
       match.markModified('activePlayers');
       match.save(function (err){
         if (err)
           return res.status(500).send({
             message: 'Could not set player as inactive'
           });
-        return res.status(201).send({
+        return res.status(200).send({
           message : 'you are inactive now'
         });
       });
