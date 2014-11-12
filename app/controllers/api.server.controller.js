@@ -71,14 +71,15 @@ exports.players = function(req,res){ //(matchId, playerId?)
     var players = [];
     match.players.forEach(function(player,playerId){
       players.push({
-        name: player.name,
-        elo: player.elo,
-        enemy: (playerId !== me),
-        active: match.activePlayers[playerId],
-        index: player.playerIndex
+        name   : player.name,
+        elo    : player.elo,
+        enemy  : (playerId !== me),
+        active : match.activePlayers[playerId],
+        index  : player.playerIndex
       });
     });
-     return res.status(201).send(players);
+    players.sort(function(a,b){ return a.index-b.index; });
+    return res.status(200).send(players);
   });
 };
 
