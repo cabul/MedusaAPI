@@ -68,8 +68,10 @@ exports.players = function(req,res){ //(matchId, playerId?)
       message: 'Error ocurred while looking for match with id = ' + matchId
     });
     if(!match) return res.status(400).send({message: 'Error retrieving match ' + matchId});
-    var players = [];
-    match.players.forEach(function(player,playerId){
+    var players = [], pid,player;
+    for( pid in match.players ) {
+      if(!match.players.hasOwnProperty(pid)) continue;
+      player = match.players[pid];
       players.push({
         name   : player.name,
         elo    : player.elo,
@@ -77,7 +79,7 @@ exports.players = function(req,res){ //(matchId, playerId?)
         active : match.activePlayers[playerId],
         index  : player.playerIndex
       });
-    });
+    }
     players.sort(function(a,b){ return a.index-b.index; });
     return res.status(200).send(players);
   });
