@@ -1,40 +1,103 @@
 'use strict';
 
-/**
- * Module dependencies.
- */
 var mongoose = require('mongoose'),
 	 Schema = mongoose.Schema;
+
+// player = {
+//   playerIndex
+//   lastSeenTurn
+//   name
+//   elo
+// }
 
 var matchSchema = new Schema({
 	players: {},
 	init_date: Date,
 	turns: Array,
-	activePlayers: []
+	active: [Boolean]
 });
 
+matchSchema.methods.numPlayers = function() {
+	return this.active.length;
+};
 
-/*matchSchema.static.getTurns = function (matchId, turns){
-	this.model('Match').findById(matchId, 'turns', function (err, turns){
-		if(err){
-			console.log('Could not get turns of match with id: s%', matchId);
-			return err;
-		}
-		return turns;
+matchSchema.methods.lastTurn = function() {
+	return this.turns.length - 1;
+};
+
+matchSchema.methods.retire = function(playerId) {
+	this.active[this.players[playerId].playerIndex] = false;
+	this.markModified('active');
+};
+
+matchSchema.methods.containsPlayer = function(playerId) {
+	return this.players.hasOwnProperty(playerId);
+};
+
+matchSchema.methods.isActive = function(playerId) {
+	return this.active[this.players[playerId].playerIndex];
+};
+
+matchSchema.methods.isTurnOf = function(playerId) {
+	return (this.turns.length % this.numPlayers()) === this.players[playerId].playerIndex;
+};
+
+matchSchema.methods.sawTurns = function(playerId) {
+	this.players[playerId].lastSeenTurn = this.lastTurn();
+	this.markModified('players');
+};
+
+matchSchema.methods.isActive = function() {
+	for(var i in this.active) {
+		if(this.active[i]) return true;
+	}
+	return false;
+};
+
+matchSchema.methods.fastForward = function() {
+	if(!this.isActive()) return; // Avoid Infinite Loop
+
+	var current = this.turns.length % this.numPlayers();
+	var mod = false;
+	while(!this.active[current]) {
+		mod = true;
+		current = (current+1) % this.numPlayers();
+		this.turns.push(null);
+	}
+
+	if(mod) this.markModified('turns');
+
+};
+
+matchSchema.methods.playerIds = function() {
+	var ids = [],pid;
+	for(pid in this.players) {
+		if(!this.players.hasOwnProperty(pid)) continue;
+		ids.push(pid);
+	}
+	return ids;
+};
+
+matchSchema.statics.createFromTickets = function(tickets) {
+	var Match = this.model('Match');
+	var i, ticket, players = {}, active = [];
+	for( i in tickets ) {
+		ticket = tickets[i];
+		players[ticket.id] = {
+			name         : ticket.name,
+			elo          : ticket.elo,
+			playerIndex  : i,
+			lastSeenTurn : 0
+		};
+		active[i] = true;
+	}
+
+	return new Match({
+		players       : players,
+		init_date     : new Date(),
+		turns         : [],
+		active : active
 	});
-};*/
-
-/*matchSchema.static.removeMatch = function (matchId){
-	this.model('Match').findByIdAndRemove(matchId, {}, function(err) {
-    if (!err) {
-           return ('Match with id = %s has been removed ', matchId);
-    }
-    else {
-           console.log('Could not remove match with id = %s', matchId) ;
-           return err;
-    }
-});
-	
-};*/
+};
 
 mongoose.model('Match', matchSchema);
