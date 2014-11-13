@@ -25,7 +25,7 @@ exports.match = function(req,res) {
         if(!match) return error('matchId corrupted');
         Ticket.findByIdAndRemove(playerId,function(err){
           if(err) return error(err);
-          res.status(200).send(matchId);
+          res.status(200).send(match._id);
         });
       });
 

@@ -21,20 +21,16 @@ matchSchema.methods.numPlayers = function() {
 	return this.active.length;
 };
 
-matchSchema.methods.lastTurn = function() {
-	return this.turns.length - 1;
-};
-
 matchSchema.methods.retire = function(playerId) {
 	this.active[this.players[playerId].playerIndex] = false;
 	this.markModified('active');
 };
 
-matchSchema.methods.containsPlayer = function(playerId) {
+matchSchema.methods.contains = function(playerId) {
 	return this.players.hasOwnProperty(playerId);
 };
 
-matchSchema.methods.isActive = function(playerId) {
+matchSchema.methods.isPlaying = function(playerId) {
 	return this.active[this.players[playerId].playerIndex];
 };
 
@@ -42,16 +38,30 @@ matchSchema.methods.isTurnOf = function(playerId) {
 	return (this.turns.length % this.numPlayers())+'' === this.players[playerId].playerIndex;
 };
 
-matchSchema.methods.sawTurns = function(playerId) {
-	this.players[playerId].lastSeenTurn = this.lastTurn();
-	this.markModified('players');
-};
-
 matchSchema.methods.isActive = function() {
 	for(var i in this.active) {
 		if(this.active[i]) return true;
 	}
 	return false;
+};
+
+matchSchema.methods.isUpdated = function(playerId) {
+	return this.players[playerId].lastSeenTurn === this.turns.length;
+};
+
+matchSchema.methods.updateFor = function(playerId) {
+	var unseenTurns = [],
+			last        = this.players[playerId].lastSeenTurn,
+			turns       = this.turns,
+			len         = turns.length;
+
+	while(last < len) {
+		unseenTurns.push(turns[last]);
+		last+=1;
+	}
+
+	return unseenTurns;
+
 };
 
 matchSchema.methods.currentPlayer = function() {
@@ -84,6 +94,24 @@ matchSchema.methods.fastForward = function() {
 
 };
 
+matchSchema.methods.allPlayers = function(playerId) {
+
+	var players = [], pid,player;
+	for( pid in this.players ) {
+		if(!this.contains(pid)) continue;
+		player = this.players[pid];
+		players.push({
+			name   : player.name,
+			elo    : player.elo,
+			enemy  : (pid !== playerId),
+			active : this.active[pid],
+			index  : player.playerIndex
+		});
+	}
+	players.sort(function(a,b){ return a.index-b.index; });
+	return players;
+};
+
 matchSchema.methods.playerIds = function() {
 	var ids = [],pid;
 	for(pid in this.players) {
@@ -102,7 +130,7 @@ matchSchema.statics.createFromTickets = function(tickets) {
 			name         : ticket.name,
 			elo          : ticket.elo,
 			playerIndex  : i,
-			lastSeenTurn : -1
+			lastSeenTurn : 0
 		};
 		active[i] = true;
 	}
