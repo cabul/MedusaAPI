@@ -102,7 +102,7 @@ matchSchema.statics.createFromTickets = function(tickets) {
 			name         : ticket.name,
 			elo          : ticket.elo,
 			playerIndex  : i,
-			lastSeenTurn : 0
+			lastSeenTurn : -1
 		};
 		active[i] = true;
 	}
