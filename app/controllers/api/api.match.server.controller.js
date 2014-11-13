@@ -52,3 +52,13 @@ exports.match = function(req,res) {
     }
   });
 };
+
+exports.active = function(req,res) {
+  var error = errorhandler(res);
+  var matchId = req.body.matchId;
+  if(!matchId) return error('matchId expected',400);
+  Match.findById(matchId,function(err,match){
+    if(err) return error(err);
+    res.status(200).send(match.isActive());
+  });
+};
