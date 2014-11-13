@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-	db: 'mongodb://localhost/medusa',
+	db: 'mongodb://localhost/medusa-dev',
 	app: {
 		title: 'MEAN - Development Environment'
 	},

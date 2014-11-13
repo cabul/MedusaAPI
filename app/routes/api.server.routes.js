@@ -3,11 +3,11 @@
 var api = require('../../app/controllers/api');
 
 module.exports = function(app) {
-
-	app.route('/api/requestTicket').post(api.requestTicket);
-	app.route('/api/requestMatch').post(api.requestMatch);
-	app.route('/api/waitTurn').post(api.waitTurn);
-	app.route('/api/submitTurn').post(api.submitTurn);
-	app.route('/api/getMatchStatus').post(api.getMatchStatus);
-	app.route('/api/setMatchStatus').post(api.setMatchStatus);
+	app.route('/api/ticket').post(api.ticket);
+	app.route('/api/match').post(api.match);
+	app.route('/api/wait').post(api.wait);
+	app.route('/api/submit').post(api.submit);
+	app.route('/api/players').post(api.players);
+	app.route('/api/retire').post(api.retire);
+  app.route('/api/turns').post(api.turns);
 };
