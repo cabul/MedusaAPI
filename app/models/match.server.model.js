@@ -60,6 +60,9 @@ matchSchema.methods.updateFor = function(playerId) {
 		last+=1;
 	}
 
+	this.players[playerId].lastSeenTurn = this.turns.length;
+	this.markModified('players');
+
 	return unseenTurns;
 
 };
@@ -104,7 +107,7 @@ matchSchema.methods.allPlayers = function(playerId) {
 			name   : player.name,
 			elo    : player.elo,
 			enemy  : (pid !== playerId),
-			active : this.active[pid],
+			active : this.isPlaying(pid),
 			index  : player.playerIndex
 		});
 	}
