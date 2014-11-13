@@ -1,118 +1,79 @@
 'use strict';
 
-var mongoose = require('mongoose'),
-  errorHandler = require('../errors'),
-  async = require('async'),
-  Match = mongoose.model('Match'),
-  Ticket = mongoose.model('Ticket');
-
-
-
-var sendNotSeenTurns = function(match, playerId, yourTurn, res){
-  var i = match.players[playerId].lastSeenTurn;
-  var turnsNotseen = [];
-  while(++i < match.turns.length){
-    turnsNotseen.push(match.turns[i]);
-  };
-  match.players[playerId].lastSeenTurn = i-1;
-  match.markModified('players');
-  match.save(function(err){
-    if (err)
-      return res.status(500).send({
-        message: 'Error ocurred while looking for turns'
-      });
-    if(yourTurn){
-      return res.status(201).send({
-        message: 'It is your turn, submit turn',
-        turns: turnsNotseen
-      }); 
-    } else {
-      return res.status(201).send({
-        message: 'It is not your turn, wait',
-        turns: turnsNotseen
-      });
-    }
-  }); 
-};
-
-
-var inactivePlayers = function(match, playerId, currentTurn, res){
-  var i = currentTurn;
-  while(!match.activePlayers[i]){  //Itera por todos los jugadores inactivos consecutivos que haya
-    match.turns.push(null);
-    i = (i+1) % Object.keys(match.players).length;
-  };
-  match.save(function(err){
-    if (err)
-      return res.status(500).send({
-        message: 'Error ocurred while looking for turns'
-      });
-    var yourTurn = match.players[playerId].playerIndex === match.turns.length % Object.keys(match.players).length;
-    sendNotSeenTurns(match, playerId, yourTurn ,res);
-  }); 
-};
-
-
+var mongoose     = require('mongoose'),
+    errorhandler = require('./utils/errorhandler'),
+    Match        = mongoose.model('Match');
 
 exports.wait = function(req, res) { //(matchId, playerId)
-  var matchId = req.body.matchId;
+  var error = errorhandler(res);
+
+  var matchId  = req.body.matchId,
+      playerId = req.body.playerId;
+
+  if(!matchId) return error('matchId expected',400);
+  if(!playerId) return error('playerId expected',400);
+
   Match.findById(matchId, function(err, match) {
-    if (err)
-      return res.status(500).send({
-        message: 'Error ocurred while looking for match with id = ' + matchId
-      });
-    if (match) {
-      var thisPlayer = match.players[req.body.playerId];
-      if (!thisPlayer) return res.status(404).send({message: "player not in match"});
-      var currentTurn = match.turns.length % Object.keys(match.players).length;
-      if (thisPlayer.playerIndex !== currentTurn) { //If it's not player's turn
-        inactivePlayers(match, req.body.playerId, currentTurn, res);
-      }else{ 
-         var yourTurn = thisPlayer.playerIndex === currentTurn;
-        sendNotSeenTurns (match, req.body.playerId, yourTurn, res);
-      }
-    } else {
-      return res.status(400).send({
-        message: 'ERROR: There is no match with id = ' + matchId
-      });
+    if(err) return error(err);
+    if(!match) return error('Match does not exist',400);
+    if(!match.containsPlayer(playerId)) return error('Player does not exist',400);
+
+    var unseenTurns = [];
+
+    var last = match.players[playerId].lastSeenTurn;
+
+    while( last++ < match.turns.length ) {
+      unseenTurns.push(match.turns[last]);
     }
+    match.sawTurns(playerId);
+
+    match.save(function(err){
+      if(err) return error(err);
+      res.status(200).send({
+        turns: unseenTurns,
+        next: match.isTurnOf(playerId)
+      });
+    });
   });
 };
 
+exports.submit = function(req, res) {
 
+  var error = errorhandler(res);
 
-exports.submit = function(req, res) { //(matchId, Turn, playerId)
-  var matchId = req.body.matchId;
-  var turn = req.body.turn;
-  var playerId = req.body.playerId; //playerId = ticketId
+  var matchId  = req.body.matchId,
+      playerId = req.body.playerId,
+      turn     = req.body.turn;
+
   Match.findById(matchId, function(err, match) {
-    if (err)
-      return res.status(500).send({
-        message: 'Error ocurred while looking for match with id = ' + matchId
-      });
-    if (match) { 
+    if(err) return error(err);
+    if(!match) return error('Match does not exist',400);
+    if(!match.containsPlayer(playerId)) return error('Player does not exist',400);
+    if(!match.isTurnOf(playerId)) return error('It is not your turn',400);
+    if(!match.isActive(playerId)) return error('Player already retired',400);
 
-      var currentTurn = match.turns.length % Object.keys(match.players).length;
-      if (match.players[playerId].playerIndex === currentTurn) {
-        match.turns.push(turn);
-        match.players[playerId].lastSeenTurn = match.turns.length-1;
-        match.markModified('players');
-        match.save(function(err) {
-          if (err)
-            return res.status(500).send({
-              message: 'Error ocurred while submiting new turn'
-            });
-          res.status(201).send('Turn submited');
-        });
-      } else {
-        return res.status(400).send({
-          message: 'Error: It is not your turn'
-        });
-      }
-    } else {
-      return res.status(400).send({
-        message: 'ERROR: There is no match with id = ' + matchId
-      });
-    }
+    match.turns.push(turn);
+    match.sawTurns(playerId);
+
+    match.fastForward();
+
+    match.save(function(err){
+      if(err) return error(err);
+      res.status(200).send('Turn OK');
+    });
+  });
+};
+
+exports.turns = function(req, res){  //(matchId)
+
+  var error = errorhandler(res);
+
+  var matchId = req.body.matchId;
+
+  if(!matchId) return error('matchId expected',400);
+
+  Match.findById(matchId, 'turns', function (err, turns){
+    if(err) return error(err);
+    res.status(200).send(turns);
   });
 };
