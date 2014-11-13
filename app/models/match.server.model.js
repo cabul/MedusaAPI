@@ -39,7 +39,7 @@ matchSchema.methods.isActive = function(playerId) {
 };
 
 matchSchema.methods.isTurnOf = function(playerId) {
-	return (this.turns.length % this.numPlayers()) === this.players[playerId].playerIndex;
+	return (this.turns.length % this.numPlayers())+'' === this.players[playerId].playerIndex;
 };
 
 matchSchema.methods.sawTurns = function(playerId) {
@@ -52,6 +52,21 @@ matchSchema.methods.isActive = function() {
 		if(this.active[i]) return true;
 	}
 	return false;
+};
+
+matchSchema.methods.currentPlayer = function() {
+	var players = this.players,
+			pid;
+	if(!this.isActive()) return null;
+	for(pid in players){
+		if(!players.hasOwnProperty(pid)) continue;
+		console.log(pid,this.isTurnOf(pid));
+		if(this.isTurnOf(pid)) return {
+			name: players[pid].name,
+			elo: players[pid].elo
+		};
+	}
+	return null;
 };
 
 matchSchema.methods.fastForward = function() {

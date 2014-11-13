@@ -10,4 +10,6 @@ module.exports = function(app) {
 	app.route('/api/players').post(api.players);
 	app.route('/api/retire').post(api.retire);
   app.route('/api/turns').post(api.turns);
+	app.route('/api/current').post(api.current);
+	app.route('/api/active').post(api.active);
 };
