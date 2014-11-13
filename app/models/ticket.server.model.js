@@ -1,9 +1,6 @@
 'use strict';
 
-/**
- * Module dependencies.
- */
-var mongoose = require('mongoose'), 
+var mongoose = require('mongoose'),
     Schema = mongoose.Schema;
 
 var ticketSchema = new Schema({
@@ -12,4 +9,8 @@ var ticketSchema = new Schema({
   matchId: String
 });
 
- mongoose.model('Ticket', ticketSchema);
+ticketSchema.methods.hasMatch = function() {
+  return !!(this.matchId);
+};
+
+mongoose.model('Ticket', ticketSchema);
