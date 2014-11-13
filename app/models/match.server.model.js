@@ -60,6 +60,9 @@ matchSchema.methods.updateFor = function(playerId) {
 		last+=1;
 	}
 
+	this.players[playerId].lastSeenTurn = this.turns.length;
+	this.markModified('players');
+
 	return unseenTurns;
 
 };
