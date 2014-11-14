@@ -52,32 +52,3 @@ exports.match = function(req,res) {
     }
   });
 };
-
-exports.active = function(req,res) {
-  var error = errorhandler(res);
-  var matchId = req.body.matchId;
-  if(!matchId) return error('matchId expected',400);
-  Match.findById(matchId,function(err,match){
-    if(err) return error(err);
-    res.status(200).send(match.isActive());
-  });
-};
-
-
-exports.current = function(req,res) {
-
-  var error = errorhandler(res);
-
-  var matchId = req.body.matchId;
-
-  if(!matchId) return error('matchId expected',400);
-
-  Match.findById(matchId,function(err,match){
-    if(err) return error(err);
-    if(!match) return error('Match does not exist',400);
-    var current = match.currentPlayer();
-    if(!current) return error('Nobody is playing',400);
-    res.status(200).send(current);
-  });
-
-};

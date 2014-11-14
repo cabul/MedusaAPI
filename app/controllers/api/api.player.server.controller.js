@@ -19,7 +19,7 @@ exports.players = function(req,res) {
     if(!match) return error('Match does not exist',400);
     if(!match.contains(playerId)) return error('Player does not exist',400);
 
-    return res.status(200).send(match.allPlayers());
+    return res.status(200).send(match.allPlayers(playerId));
   });
 };
 
@@ -40,7 +40,6 @@ exports.retire = function(req,res) {
     if(!match.contains(playerId)) return error('Player does not exist',400);
 
     match.retire(playerId);
-    match.fastForward();
 
     match.save(function(err){
       if(err) return error(err);

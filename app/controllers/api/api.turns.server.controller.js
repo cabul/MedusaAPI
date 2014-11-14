@@ -17,7 +17,8 @@ exports.wait = function(req, res) { //(matchId, playerId)
     if(err) return error(err);
     if(!match) return error('Match does not exist',400);
     if(!match.contains(playerId)) return error('Player does not exist',400);
-    if(match.isUpdated(playerId)) return res.status(200).send([]);
+
+    match.fastForward();
 
     var unseenTurns = match.updateFor(playerId);
 
@@ -50,8 +51,6 @@ exports.submit = function(req, res) {
     match.turns.push(turn);
 
     match.updateFor(playerId);
-
-    match.fastForward();
 
     match.save(function(err){
       if(err) return error(err);
