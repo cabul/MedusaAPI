@@ -68,12 +68,7 @@ exports.turns = function(req, res){  //(matchId)
   var error = errorhandler(res);
   var matchId = req.body.matchId;
   if(!matchId) return error('matchId expected',400);
-<<<<<<< HEAD
-  Match.findById(matchId, 'turns', function (err, turns){
-=======
-
   Match.findById(matchId, function (err, match){
->>>>>>> d2360ecdc395257e7c1d8be92d29edf71d49f45e
     if(err) return error(err);
     if(!match) return error('Match does not exist',400);
     res.status(200).send(match.turns);
