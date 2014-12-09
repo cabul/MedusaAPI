@@ -1,87 +1,112 @@
 'use strict';
 
 var mongoose = require('mongoose'),
-	 Schema = mongoose.Schema;
-
-// player = {
-//   playerIndex
-//   lastSeenTurn
-//   name
-//   elo
-// }
+		Schema   = mongoose.Schema;
 
 var matchSchema = new Schema({
-	players: {},
-	init_date: Date,
-	turns: Array,
-	active: [Boolean]
+	players       : {},
+	sortedPlayers : Array,
+	init_date     : Date,
+	turns         : Array,
+	active        : Boolean
 });
 
 matchSchema.methods.numPlayers = function() {
-	return this.active.length;
+	return this.sortedPlayers.length;
 };
 
-matchSchema.methods.lastTurn = function() {
-	return this.turns.length - 1;
-};
-
-matchSchema.methods.retire = function(playerId) {
-	this.active[this.players[playerId].playerIndex] = false;
-	this.markModified('active');
-};
-
-matchSchema.methods.containsPlayer = function(playerId) {
-	return this.players.hasOwnProperty(playerId);
-};
-
-matchSchema.methods.isActive = function(playerId) {
-	return this.active[this.players[playerId].playerIndex];
-};
-
-matchSchema.methods.isTurnOf = function(playerId) {
-	return (this.turns.length % this.numPlayers())+'' === this.players[playerId].playerIndex;
-};
-
-matchSchema.methods.sawTurns = function(playerId) {
-	this.players[playerId].lastSeenTurn = this.lastTurn();
-	this.markModified('players');
-};
-
-matchSchema.methods.isActive = function() {
-	for(var i in this.active) {
-		if(this.active[i]) return true;
-	}
-	return false;
+matchSchema.methods.currentTurn = function() {
+	return this.turns.length % this.numPlayers();
 };
 
 matchSchema.methods.currentPlayer = function() {
-	var players = this.players,
-			pid;
-	if(!this.isActive()) return null;
-	for(pid in players){
-		if(!players.hasOwnProperty(pid)) continue;
-		console.log(pid,this.isTurnOf(pid));
-		if(this.isTurnOf(pid)) return {
-			name: players[pid].name,
-			elo: players[pid].elo
-		};
+	return this.sortedPlayers[this.currentTurn()];
+};
+
+matchSchema.methods.retire = function(playerId) {
+	this.players[playerId].active = false;
+	var match = this;
+	this.markModified('players');
+	var i,len;
+	for( i = 0, len = this.sortedPlayers.length; i<len; i+=1 ) {
+		if(this.isPlaying(this.sortedPlayers[i])) return;
 	}
-	return null;
+	this.active = false;
+	this.markModified('active');
+};
+
+matchSchema.methods.contains = function(playerId) {
+	return this.players.hasOwnProperty(playerId);
+};
+
+matchSchema.methods.isPlaying = function(playerId) {
+	return this.players[playerId].active;
+};
+
+matchSchema.methods.isTurnOf = function(playerId) {
+	return this.sortedPlayers.indexOf(playerId) === this.currentTurn();
+};
+
+matchSchema.methods.isUpdated = function(playerId) {
+	return this.players[playerId].lastSeenTurn === this.turns.length;
+};
+
+matchSchema.methods.updateFor = function(playerId) {
+	var unseenTurns = [],
+			last        = this.players[playerId].lastSeenTurn,
+			turns       = this.turns,
+			len         = turns.length;
+
+	while(last < len) {
+		unseenTurns.push(turns[last]);
+		last+=1;
+	}
+
+	this.players[playerId].lastSeenTurn = this.turns.length;
+	this.markModified('players');
+
+	return unseenTurns;
+
 };
 
 matchSchema.methods.fastForward = function() {
-	if(!this.isActive()) return; // Avoid Infinite Loop
+	if(!this.active) return; // Avoid Infinite Loop
 
-	var current = this.turns.length % this.numPlayers();
 	var mod = false;
-	while(!this.active[current]) {
-		mod = true;
-		current = (current+1) % this.numPlayers();
+
+	var match = this;
+
+	this.sortedPlayers.forEach(function(pid){
+
+		console.log(pid+' is '+(match.isPlaying(pid)?'':'not ')+'playing');
+
+	});
+
+	while( !this.isPlaying(this.currentPlayer()) ) {
+		console.log(this.currentPlayer()+' is not playing');
 		this.turns.push(null);
+		mod = true;
 	}
 
 	if(mod) this.markModified('turns');
 
+};
+
+matchSchema.methods.allPlayers = function(playerId) {
+
+	var players = [], pid,player;
+	for( pid in this.players ) {
+		if(!this.contains(pid)) continue;
+		player = this.players[pid];
+		players.push({
+			name   : player.name,
+			elo    : player.elo,
+			enemy  : (pid !== playerId),
+			active : player.active
+		});
+	}
+	players.sort(function(a,b){ return a.index-b.index; });
+	return players;
 };
 
 matchSchema.methods.playerIds = function() {
@@ -95,23 +120,24 @@ matchSchema.methods.playerIds = function() {
 
 matchSchema.statics.createFromTickets = function(tickets) {
 	var Match = this.model('Match');
-	var i, ticket, players = {}, active = [];
+	var i, ticket, players = {}, sortedPlayers = [];
 	for( i in tickets ) {
 		ticket = tickets[i];
 		players[ticket.id] = {
 			name         : ticket.name,
 			elo          : ticket.elo,
-			playerIndex  : i,
-			lastSeenTurn : -1
+			lastSeenTurn : 0,
+			active       : true
 		};
-		active[i] = true;
+		sortedPlayers.push(ticket._id);
 	}
 
 	return new Match({
 		players       : players,
 		init_date     : new Date(),
 		turns         : [],
-		active : active
+		sortedPlayers : sortedPlayers,
+		active        : true
 	});
 };
 

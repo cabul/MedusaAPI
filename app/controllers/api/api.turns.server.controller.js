@@ -16,16 +16,11 @@ exports.wait = function(req, res) { //(matchId, playerId)
   Match.findById(matchId, function(err, match) {
     if(err) return error(err);
     if(!match) return error('Match does not exist',400);
-    if(!match.containsPlayer(playerId)) return error('Player does not exist',400);
+    if(!match.contains(playerId)) return error('Player does not exist',400);
 
-    var unseenTurns = [];
+    match.fastForward();
 
-    var last = match.players[playerId].lastSeenTurn;
-
-    while( last++ < match.turns.length ) {
-      unseenTurns.push(match.turns[last]);
-    }
-    match.sawTurns(playerId);
+    var unseenTurns = match.updateFor(playerId);
 
     match.save(function(err){
       if(err) return error(err);
@@ -48,14 +43,14 @@ exports.submit = function(req, res) {
   Match.findById(matchId, function(err, match) {
     if(err) return error(err);
     if(!match) return error('Match does not exist',400);
-    if(!match.containsPlayer(playerId)) return error('Player does not exist',400);
+    if(!match.contains(playerId)) return error('Player does not exist',400);
     if(!match.isTurnOf(playerId)) return error('It is not your turn',400);
-    if(!match.isActive(playerId)) return error('Player already retired',400);
+    if(!match.isPlaying(playerId)) return error('Player already retired',400);
+    if(!match.isUpdated(playerId)) return error('Player is not up to date',400);
 
     match.turns.push(turn);
-    match.sawTurns(playerId);
 
-    match.fastForward();
+    match.updateFor(playerId);
 
     match.save(function(err){
       if(err) return error(err);
@@ -64,7 +59,9 @@ exports.submit = function(req, res) {
   });
 };
 
-exports.turns = function(req, res){  //(matchId)
+
+exports.turns = function(req, res){
+
   var error = errorhandler(res);
   var matchId = req.body.matchId;
   if(!matchId) return error('matchId expected',400);
@@ -73,22 +70,4 @@ exports.turns = function(req, res){  //(matchId)
     if(!match) return error('Match does not exist',400);
     res.status(200).send(match.turns);
   });
-};
-
-exports.current = function(req,res) {
-
-  var error = errorhandler(res);
-
-  var matchId = req.body.matchId;
-
-  if(!matchId) return error('matchId expected',400);
-
-  Match.findById(matchId,function(err,match){
-    if(err) return error(err);
-    if(!match) return error('Match does not exist',400);
-    var current = match.currentPlayer();
-    if(!current) return error('Nobody is playing',400);
-    res.status(200).send(current);
-  });
-
 };
