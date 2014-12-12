@@ -109,6 +109,16 @@ matchSchema.methods.allPlayers = function(playerId) {
 	return players;
 };
 
+matchSchema.methods.activePlayers = function() {
+
+	var activeplayers = 0;
+	for(var pid in this.players ) {
+	  if(this.players[pid].active)activeplayers += 1;
+	}
+	
+	return activeplayers;
+};
+
 matchSchema.methods.playerIds = function() {
 	var ids = [],pid;
 	for(pid in this.players) {

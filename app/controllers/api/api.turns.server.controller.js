@@ -26,6 +26,7 @@ exports.wait = function(req, res) { //(matchId, playerId)
       if(err) return error(err);
       res.status(200).send({
         turns: unseenTurns,
+        activePlayers: match.activePlayers(),
         next: match.isTurnOf(playerId)
       });
     });
