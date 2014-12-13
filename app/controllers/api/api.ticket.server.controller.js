@@ -19,3 +19,23 @@ exports.ticket = function(req,res) {
   });
 
 };
+
+exports.cancel = function(req,res) {
+  var error = errorhandler(res);
+
+  var playerId = req.body.playerId;
+
+  if(!playerId) error('playerId expected',400);
+
+  Ticket.findById(playerId,function(err,ticket){
+    if(err) return error(err);
+    if(ticket.hasMatch) return error('Player has a match',400);
+
+    Ticket.findByIdAndRemove(playerId,function(err){
+      if(err) return error(err);
+      res.status(200).send('OK');
+    });
+
+  });
+
+};
