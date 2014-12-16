@@ -6,6 +6,7 @@ var mongoose = require('mongoose'),
 var ticketSchema = new Schema({
   name: String,
   elo: Number,
+  numberOfPlayers: Number,
   matchId: String
 });
 

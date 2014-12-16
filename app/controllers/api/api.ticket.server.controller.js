@@ -10,6 +10,7 @@ exports.ticket = function(req,res) {
   var newTicket = new Ticket({
     name: req.body.name || 'Anonymous',
     elo: req.body.elo || 0,
+    numberOfPlayers: req.body.numberOfPlayers || 2,
     matchId: null
   });
 

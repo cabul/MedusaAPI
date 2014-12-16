@@ -26,6 +26,7 @@ exports.wait = function(req, res) { //(matchId, playerId)
       if(err) return error(err);
       res.status(200).send({
         turns: unseenTurns,
+        activePlayers: match.activePlayers(),
         next: match.isTurnOf(playerId)
       });
     });
@@ -59,14 +60,12 @@ exports.submit = function(req, res) {
   });
 };
 
+
 exports.turns = function(req, res){
 
   var error = errorhandler(res);
-
   var matchId = req.body.matchId;
-
   if(!matchId) return error('matchId expected',400);
-
   Match.findById(matchId, function (err, match){
     if(err) return error(err);
     if(!match) return error('Match does not exist',400);
