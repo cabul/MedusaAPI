@@ -11,7 +11,8 @@ exports.ticket = function(req,res) {
     name: req.body.name || 'Anonymous',
     elo: req.body.elo || 0,
     numberOfPlayers: req.body.numberOfPlayers || 2,
-    matchId: null
+    matchId: null,
+    setup: req.body.setup || null
   });
 
   newTicket.save(function(err) {
