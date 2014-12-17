@@ -7,7 +7,8 @@ var ticketSchema = new Schema({
   name: String,
   elo: Number,
   numberOfPlayers: Number,
-  matchId: String
+  matchId: String,
+  setup: Object
 });
 
 ticketSchema.methods.hasMatch = function() {
