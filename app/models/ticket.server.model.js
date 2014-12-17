@@ -15,4 +15,8 @@ ticketSchema.methods.hasMatch = function() {
   return !!(this.matchId);
 };
 
+ticketSchema.methods.numOpponents = function(){
+  return this.numberOfPlayers - 1;
+};
+
 mongoose.model('Ticket', ticketSchema);

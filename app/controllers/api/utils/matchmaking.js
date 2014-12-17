@@ -13,10 +13,12 @@ var fifoMaker = function(ticket,cb){
     },
     numberOfPlayers: ticket.numberOfPlayers,
     matchId: null
-  },function(err,opponents){
+  })
+  .limit(ticket.numOpponents())
+  .exec(function(err,opponents){
     if(err) return cb(err);
-    if(!opponents) return cb(null,null);
-    var matchPlayers = opponents.slice(0,ticket.numberOfPlayers-1).concat(ticket);
+    if(opponents.length < ticket.numOpponents()) return cb(null,null);
+    var matchPlayers = opponents.concat(ticket);
     Match.createFromTickets(matchPlayers).save(cb);
   });
 };
@@ -32,10 +34,12 @@ var eloMaker = function(ticket,cb){
       $gte: ticket.elo * (1 - _eloratio),
       $lte: ticket.elo * (1 + _eloratio)
     }
-  },function(err,opponents){
+  })
+  .limit(ticket.numOpponents())
+  .exec(function(err,opponents){
     if(err) return cb(err);
-    if(!opponents) return cb(null,null);
-    var matchPlayers = opponents.slice(0,ticket.numberOfPlayers-1).concat(ticket);
+    if(opponents.length < ticket.numOpponents()) return cb(null,null);
+    var matchPlayers = opponents.concat(ticket);
     Match.createFromTickets(matchPlayers).save(cb);
   });
 };
