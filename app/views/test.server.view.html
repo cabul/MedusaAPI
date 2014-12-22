@@ -1,18 +1,42 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-</head>
-<body>
-Test page {{datito}}
-<div id="paco">
-</div>
-<script type=text/javascript>
-console.log({{board}});
-var board = {{board}};
-bobo = board();
-console.log(bobo);
-
-document.getElementById("paco").innerHTML(bobo);
-</script><hr>
-</body>
+<!DOCTYPE html>
+<html lang=es>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TTToe</title>
+    <link rel="stylesheet" href="./test/css/ttis.css">
+  </head>
+  <body>
+  <fieldset id="game-set">
+	<legend>Game</legend>
+	<div id="game-board"></div>
+	<div id="game-actions"></div>
+  </fieldset>
+  <fieldset id="control-set">
+	<legend>Control</legend>
+	<div id="control">
+		<ul id="control-list">
+			<li>Controller:
+				<select id="controller-select">
+					<option>Local</option>
+					<option>Server(online)</option>
+				</select>
+			</li>
+			<li id="url-field">URL:
+				<input id="controller-url" type=text>
+			</li>
+		</ul>
+		<input type="button" value="Run" id="run-button">
+		<input type="button" value="Stop" id="stop-button">
+		<input type="button" value="Reset" id="reset-button">
+	</div>
+  </fieldset>
+  <fieldset>
+	<legend>Activity</legend>
+	<textarea id="log" placeholder="activity" cols=50 rows=10 readonly></textarea>
+  </fieldset>
+  <script type="text/javascript" src="./test/js/js.js">
+  </script>
+  </body>
 </html>
