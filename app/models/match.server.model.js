@@ -102,11 +102,22 @@ matchSchema.methods.allPlayers = function(playerId) {
 			name   : player.name,
 			elo    : player.elo,
 			enemy  : (pid !== playerId),
-			active : player.active
+			active : player.active,
+			setup  : player.setup
 		});
 	}
 	players.sort(function(a,b){ return a.index-b.index; });
 	return players;
+};
+
+matchSchema.methods.activePlayers = function() {
+
+	var activeplayers = 0;
+	for(var pid in this.players ) {
+	  if(this.players[pid].active)activeplayers += 1;
+	}
+	
+	return activeplayers;
 };
 
 matchSchema.methods.playerIds = function() {
@@ -127,7 +138,8 @@ matchSchema.statics.createFromTickets = function(tickets) {
 			name         : ticket.name,
 			elo          : ticket.elo,
 			lastSeenTurn : 0,
-			active       : true
+			active       : true,
+			setup				 : ticket.setup
 		};
 		sortedPlayers.push(ticket._id);
 	}
