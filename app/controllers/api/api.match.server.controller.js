@@ -8,10 +8,9 @@ var mongoose = require('mongoose'),
 
 exports.match = function(req,res) {
   var error = errorhandler(res);
-
   var playerId = req.body.playerId;
+  console.log(req.body);
   if(!playerId) return error('playerId expected',400);
-
   Ticket.findById(playerId, function(err, ticket) {
     if(err) return error(err);
     if(!ticket) return error('Ticket does not exist',400);
