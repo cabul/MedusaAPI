@@ -1,0 +1,56 @@
+body#test {
+	background-color: #fbc7d3;
+}
+
+#test table {
+	margin: 20px;
+	background-color: #ffffff;
+	border: 1px solid black;
+	border-collapse: collapse;
+}
+
+#test #game-board table{
+	min-height: 200px;
+}
+
+#test fieldset{
+	max-width: 50%;
+    float: left;
+    margin-right: 20px;
+}
+
+#test td {
+	text-align: center;
+	padding: 5px;
+	border: 1px solid black;
+	min-width: 100px;
+	width: 30%;	
+	min-height: 100px;
+	height: 30%;
+	font-size: 20px;
+}
+
+#test td.status {
+	text-align: left;
+	font-size: 12px;
+	background-color: #eeeeee; 
+}
+
+#test ul {
+	list-style-type: none;
+	margin: -0px;
+	margin-left: -40px;
+	padding; 0px;
+}
+
+#test #log {
+	max-height: 50%;
+}
+
+#test .XCell {
+	color: #ff0000;
+}
+#test .OCell {
+	color: blue;
+}
+
