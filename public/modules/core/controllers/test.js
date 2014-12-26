@@ -7,8 +7,8 @@ intervalMilisecs = 1000;
 runningGame = false;
 activityLine = 0;
 nextAction = 0;
-startingPlayer = x;
 localPlayer = x;
+remotePlayer = o;
 currentPlayer = x;
 autoScroll = true;
 ticket1 = 0;
@@ -33,7 +33,7 @@ board.gT = function(){
 	}
 	var statusRow = document.createElement("tr");
 	var statusCell = document.createElement("td");
-	statusCell.appendChild(document.createTextNode("Game not yer started"));
+	statusCell.appendChild(document.createTextNode("Game not yet started"));
 	statusCell.colSpan = "3";
 	statusCell.className = "status";
 	statusCell.id = "game-info";
@@ -69,23 +69,26 @@ board.victory = function(player){
 	else if (player===x) board.status = 2;
 	return "error";
 };
-board.makeMoves = function(moves){
-  console.log(moves.length?"moves tiene algo":"moves es vacio");
-  if(moves[0]===x) localPlayer = o;
-  else if(moves[0]===o) localPlayer = x;
-  for (var turn = 0; turn < moves.length; turn++){
-  	/**
-
-
-		ACCION SOBRE UNA CELDA EN PARTICULAR
-
-  	**/
+board.makeMoves = function(moves,player){
+  if(moves[0]===x){
+  	localPlayer = o;
+  	remotePlayer = x;}
+  else if(moves[0]===o){ 
+  	localPlayer = x;
+  	remotePlayer = o;}
+  else for (var turn = 0; turn < moves.length; turn++){
+  	if(board[moves[turn][0]][moves[turn][1]]<10)
+  	board[moves[turn][0]][moves[turn][1]] = player;
   }
   board.updateStatus();
-  refreshStatusBar(document.getElementById("game-info"));
+  refreshBoard();
 };
-
-
+initializeMatch = function(){
+	localPlayer = x;
+	remotePlayer = o;
+	board.status = 1;
+	actions[3]("{\"matchId\": " + matchId + ",\"playerId\": " + ticket1+ ", \"turn\": \"" + localPlayer + "\"}");
+};
 function refreshBoard (){
 	var boardView = document.getElementById("game-board").childNodes[0];
 	for ( i = 0; i < 3; i++){
@@ -168,18 +171,22 @@ function(){
 	function(){
 	controller.doGameAction("wait","{\"matchId\": "+matchId+",\"playerId\": "+ticket1+"}", 
 		function(waitResponse){
-			console.log(waitResponse);
+			console.log("wait response: "+waitResponse);
 			res = JSON.parse(waitResponse);
 			myTurn = res.next;
-			if(res.turns.length) board.makeMoves(res.turns);
-			else if (myTurn && !board.started()) board.makeMoves(res.turns);//initializeMatch();   //If first turn && myTurn, this client initializes
+			currentPlayer = myTurn?localPlayer:remotePlayer;
+			refreshStatusBar();
+			if(res.turns.length) board.makeMoves(res.turns,remotePlayer);
+			else if (myTurn && !board.started()) initializeMatch();   //If first turn && myTurn, this client initializes
 			clientLog("it "+(myTurn?"IS":"IS NOT")+" my turn");
 	});}
 	,
 	function(string){
 	controller.doGameAction("submit",string,
 		function(res){
-
+			myTurn=false;
+			currentPlayer = myTurn?localPlayer:remotePlayer;
+			refreshStatusBar();
 		});}
 ];
 
@@ -189,11 +196,8 @@ function(){
 function clickThisCell (){
 	if(!myTurn) return;
 	actions[3]("{\"matchId\":" + matchId + ",\"playerId\":" + ticket1 + ",\"turn\":\"" + this.id +"\"}");
-	console.log(board);
-	board.makeMoves([this.id]);
-	console.log(board);
+	board.makeMoves([this.id],localPlayer);
 	refreshBoard();
-	play();
 }
 
 function updateController (index) {
@@ -219,7 +223,7 @@ function clientLog (text) {
 function refreshStatusBar (){
 	var gameInfo = document.getElementById("game-info");
 	if(board.gS()!==1)	gameInfo.innerHTML = statuses[board.gS()];
-	else gameInfo.innerHTML = statuses[board.gS()] + " " + currentPlayer + "'s turn";
+	else gameInfo.innerHTML = statuses[board.gS()] + " playing as " + localPlayer + ", it is " + currentPlayer + "'s turn";
 }
 
 function play () {
@@ -240,8 +244,7 @@ function waitLoop (){
 	if(!ticket1) actions[0]();
 	else if (!matchId) actions[1]();
 	else if (!myTurn) actions[2]();
-	else if (!board.started) 
-	refreshStatusBar();
+	else if (!board.started) refreshStatusBar();
 }
 
 function nextActionResponse (){
