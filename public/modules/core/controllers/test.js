@@ -1,15 +1,15 @@
 x = "X";
 o = "O";
-_s = " ";
-board = [[x,_s,o],[_s,_s,_s],[_s,_s,_s]];
-statuses = ["Match in Progress: ", "X won!", "O won!", "Draw!", "Dragons!!@!"];
+board = [[1,2,3],[4,5,6],[7,8,9]];
+statuses = ["Not yet started", "Match in Progress: ", "X won!", "O won!", "Draw!", "Dragons!!@!"];
 board.status = 0;
 intervalMilisecs = 1000;
 runningGame = false;
 activityLine = 0;
 nextAction = 0;
 startingPlayer = x;
-currentPlayer = startingPlayer;
+localPlayer = x;
+currentPlayer = x;
 autoScroll = true;
 ticket1 = 0;
 ticket2 = 0;
@@ -19,41 +19,90 @@ myTurn = false;
 
 board.gT = function(){
 	var table = document.createElement("table");
-	for ( i = 0; i < 3; i++){
+	for (var i = 0; i < 3; i++){
 		var row = document.createElement("tr");
-		for ( j = 0; j < 3; j++){
+		for (var j = 0; j < 3; j++){
 			var cell = document.createElement("td");
 			cell.id = i+""+j;
 			cell.onclick = clickThisCell;
-			cell.appendChild(document.createTextNode(board[i][j]))
+			if(board[i][j] === o || board[i][j] === x) cell.appendChild(document.createTextNode(board[i][j]));
+			else cell.appendChild(document.createTextNode(""));
 			row.appendChild(cell);
 		}
 		table.appendChild(row);
 	}
 	var statusRow = document.createElement("tr");
 	var statusCell = document.createElement("td");
-	statusCell.appendChild(document.createTextNode(startingPlayer + "'s turn"));
+	statusCell.appendChild(document.createTextNode("Game not yer started"));
 	statusCell.colSpan = "3";
 	statusCell.className = "status";
 	statusCell.id = "game-info";
 	statusRow.appendChild(statusCell);
 	table.appendChild(statusRow);
+	table.id = "board";
 	return table;
 };
 
 board.gS = function(){
 	return board.status;
-}
+};
+board.started = function(){
+	return !!board.status;
+};
+board.updateStatus = function(){
+	var draw = true;
+	if (board[0][0] === board[1][1] && 
+			board[0][0] === board[2][2]) return board.victory(board[1][1]);//main diagonal
+	else if ( board[2][0] === board[1][1] &&
+						board[2][0] === board[0][2]) return board.victory(board[1][1]); //reverse diagonal
+	else for (var i = 0; i < 3; i++){
+		if( board[i][0] === board[i][1] &&
+				board[i][1] === board[i][2]) return board.victory(board[i][1]);//horizontal strike
+		else if ( board[0][i] === board[1][i] &&
+							board[0][i] === board[2][i]) return board.victory(board[1][i]);//vertical strike
+		if(board[0][i] < 10 || board[1][i] < 10 || board[2][i] < 10) draw = false;
+	}
+	board.status = draw?4:1;
+};
+board.victory = function(player){
+	if(player===o) board.status = 3;
+	else if (player===x) board.status = 2;
+	return "error";
+};
+board.makeMoves = function(moves){
+  console.log(moves.length?"moves tiene algo":"moves es vacio");
+  if(moves[0]===x) localPlayer = o;
+  else if(moves[0]===o) localPlayer = x;
+  for (var turn = 0; turn < moves.length; turn++){
+  	/**
 
-function colorize (boardView, board){
+
+		ACCION SOBRE UNA CELDA EN PARTICULAR
+
+  	**/
+  }
+  board.updateStatus();
+  refreshStatusBar(document.getElementById("game-info"));
+};
+
+
+function refreshBoard (){
+	var boardView = document.getElementById("game-board").childNodes[0];
 	for ( i = 0; i < 3; i++){
 		var row = boardView.childNodes[i];
 		for ( j = 0; j < 3; j++){
 			var cell = row.childNodes[j];
-			if (board[i][j]===x) cell.className = "XCell";
-			else if (board[i][j]===o) cell.className = "OCell";
+			if (board[i][j]===x){ 
+				cell.className = "XCell";
+				cell.innerHTML = x;
+			}
+			else if (board[i][j]===o) {
+				cell.className = "OCell";
+				cell.innerHTML = o;
+			}
 		}
 	}
+	refreshStatusBar();
 }
 
 localController = [];
@@ -65,27 +114,9 @@ localController.doGameAction = function (action, params){
 
 
 serverController.doGameAction = function (action, params, cb){
-	console.log("params: " +params);
+	console.log(action +" params: " +params);
 	serverController.sendPostRequest("/api/"+action+"/", params, cb);
 	return serverController.response;
-};
-
-serverController.sendPostRequestr = function (path, params){
-	console.log(path);
-	var form = document.createElement("form");
-    form.setAttribute("method", "post");
-    form.setAttribute("action", path);
-	for(var key in params) {
-        if(params.hasOwnProperty(key)) {
-            var hiddenField = document.createElement("input");
-            hiddenField.setAttribute("type", "hidden");
-            hiddenField.setAttribute("name", key);
-            hiddenField.setAttribute("value", params[key]);
-            form.appendChild(hiddenField);
-         }
-    }   
-	document.body.appendChild(form);
-	form.submit();
 };
 
 
@@ -138,16 +169,31 @@ function(){
 	controller.doGameAction("wait","{\"matchId\": "+matchId+",\"playerId\": "+ticket1+"}", 
 		function(waitResponse){
 			console.log(waitResponse);
-			myTurn = JSON.parse(waitResponse).next;
+			res = JSON.parse(waitResponse);
+			myTurn = res.next;
+			if(res.turns.length) board.makeMoves(res.turns);
+			else if (myTurn && !board.started()) board.makeMoves(res.turns);//initializeMatch();   //If first turn && myTurn, this client initializes
 			clientLog("it "+(myTurn?"IS":"IS NOT")+" my turn");
 	});}
+	,
+	function(string){
+	controller.doGameAction("submit",string,
+		function(res){
+
+		});}
 ];
 
 
 
 
 function clickThisCell (){
-	controller.doGameAction("submit",[this]);
+	if(!myTurn) return;
+	actions[3]("{\"matchId\":" + matchId + ",\"playerId\":" + ticket1 + ",\"turn\":\"" + this.id +"\"}");
+	console.log(board);
+	board.makeMoves([this.id]);
+	console.log(board);
+	refreshBoard();
+	play();
 }
 
 function updateController (index) {
@@ -170,9 +216,10 @@ function clientLog (text) {
 	textArea.blur();
 }
 
-function refreshStatusBar (gameInfo){
-	if(board.gS())	gameInfo.innerHTML = statuses[board.gS()];
-	else gameInfo.innerHTML = statuses[board.gS()] + currentPlayer + "'s turn";
+function refreshStatusBar (){
+	var gameInfo = document.getElementById("game-info");
+	if(board.gS()!==1)	gameInfo.innerHTML = statuses[board.gS()];
+	else gameInfo.innerHTML = statuses[board.gS()] + " " + currentPlayer + "'s turn";
 }
 
 function play () {
@@ -193,7 +240,8 @@ function waitLoop (){
 	if(!ticket1) actions[0]();
 	else if (!matchId) actions[1]();
 	else if (!myTurn) actions[2]();
-	refreshStatusBar(document.getElementById("game-info"));
+	else if (!board.started) 
+	refreshStatusBar();
 }
 
 function nextActionResponse (){
@@ -204,11 +252,11 @@ function nextActionResponse (){
 
 
 
-boardView = document.getElementById("game-board");
-control = document.getElementById("control");
+var boardView = document.getElementById("game-board");
+var control = document.getElementById("control");
 boardView.appendChild(board.gT());
 updateFields();
-colorize(boardView.childNodes[0], board);
+refreshBoard();
 
 
 
@@ -222,3 +270,7 @@ controllerSelect.onchange = function (){
 	updateFields(this.selectedIndex);
 	updateController(this.selectedIndex);
 };
+
+/*
+board.updateStatus();
+refreshStatusBar(document.getElementById("game-info"));*/
