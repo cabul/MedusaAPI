@@ -11,12 +11,13 @@ body#test {
 
 #test #game-board table{
 	min-height: 200px;
+	height: 200px;
 }
 
 #test fieldset{
 	max-width: 50%;
-    float: left;
-    margin-right: 20px;
+  float: left;
+  margin-right: 20px;
 }
 
 #test td {
@@ -40,7 +41,6 @@ body#test {
 	list-style-type: none;
 	margin: -0px;
 	margin-left: -40px;
-	padding; 0px;
 }
 
 #test #log {

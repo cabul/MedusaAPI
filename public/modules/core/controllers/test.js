@@ -4,15 +4,13 @@ board = [[1,2,3],[4,5,6],[7,8,9]];
 statuses = ["Not yet started", "Match in Progress: ", "X won!", "O won!", "Draw!", "Dragons!!@!"];
 board.status = 0;
 intervalMilisecs = 1000;
+autoScroll = true;
 runningGame = false;
 activityLine = 0;
-nextAction = 0;
 localPlayer = x;
 remotePlayer = o;
 currentPlayer = x;
-autoScroll = true;
-ticket1 = 0;
-ticket2 = 0;
+ticketId = 0;
 matchId = 0;
 myTurn = false;
 
@@ -67,7 +65,8 @@ board.updateStatus = function(){
 board.victory = function(player){
 	if(player===o) board.status = 3;
 	else if (player===x) board.status = 2;
-	return "error";
+	else return "error";
+	stop();
 };
 board.makeMoves = function(moves,player){
   if(moves[0]===x){
@@ -77,17 +76,11 @@ board.makeMoves = function(moves,player){
   	localPlayer = x;
   	remotePlayer = o;}
   else for (var turn = 0; turn < moves.length; turn++){
-  	if(board[moves[turn][0]][moves[turn][1]]<10)
   	board[moves[turn][0]][moves[turn][1]] = player;
   }
+  myTurn = false;
   board.updateStatus();
   refreshBoard();
-};
-initializeMatch = function(){
-	localPlayer = x;
-	remotePlayer = o;
-	board.status = 1;
-	actions[3]("{\"matchId\": " + matchId + ",\"playerId\": " + ticket1+ ", \"turn\": \"" + localPlayer + "\"}");
 };
 function refreshBoard (){
 	var boardView = document.getElementById("game-board").childNodes[0];
@@ -107,17 +100,20 @@ function refreshBoard (){
 	}
 	refreshStatusBar();
 }
-
-localController = [];
-serverController = [];
-controller = serverController;
-localController.doGameAction = function (action, params){
-
+function initializeMatch (){
+	localPlayer = x;
+	remotePlayer = o;
+	board.status = 1;
+	actions[3]("{\"matchId\": " + matchId + ",\"playerId\": " + ticketId+ ", \"turn\": \"" + localPlayer + "\"}");
 };
 
 
+serverController = [];
+controller = serverController;
+
+
+
 serverController.doGameAction = function (action, params, cb){
-	console.log(action +" params: " +params);
 	serverController.sendPostRequest("/api/"+action+"/", params, cb);
 	return serverController.response;
 };
@@ -147,31 +143,26 @@ serverController.sendPostRequest = function (path, params, cb){
 serverController.updateURL = function (url){
 	this.remoteUrl = url;
 }
-controllers = [localController,serverController];
 
 actions = [
 	function(){
-	controller.doGameAction("ticket","",function(ticketResponse){
-		ticket1=ticketResponse;
- 		clientLog("player1 got ticket "+ ticket1);
+	clientLog("sent ticket request");
+	serverController.doGameAction("ticket","",function(ticketResponse){
+		ticketId=ticketResponse;
+ 		clientLog("local player got ticket "+ ticketId);
  	});}
-/* 	,
-function(){
-	controller.doGameAction("ticket","",function(ticketResponse){
-		ticket2=ticketResponse;
- 		clientLog("player2 got ticket "+ ticket2);
- 	});}*/
 	,
 	function(){
-	controller.doGameAction("match","{\"playerId\": "+ticket1+"}", function(matchResponse){
+	clientLog("sent match request");
+	serverController.doGameAction("match","{\"playerId\": "+ticketId+"}", function(matchResponse){
 		matchId = matchResponse;
  		clientLog("matchId : "+ matchId);
 	});}
 	,
 	function(){
-	controller.doGameAction("wait","{\"matchId\": "+matchId+",\"playerId\": "+ticket1+"}", 
+	clientLog("sent wait request");
+	serverController.doGameAction("wait","{\"matchId\": "+matchId+",\"playerId\": "+ticketId+"}", 
 		function(waitResponse){
-			console.log("wait response: "+waitResponse);
 			res = JSON.parse(waitResponse);
 			myTurn = res.next;
 			currentPlayer = myTurn?localPlayer:remotePlayer;
@@ -182,8 +173,10 @@ function(){
 	});}
 	,
 	function(string){
-	controller.doGameAction("submit",string,
-		function(res){
+	clientLog("sent submit");
+	serverController.doGameAction("submit",string,
+		function(submitResponse){
+			clientLog("submit answered");
 			myTurn=false;
 			currentPlayer = myTurn?localPlayer:remotePlayer;
 			refreshStatusBar();
@@ -195,22 +188,13 @@ function(){
 
 function clickThisCell (){
 	if(!myTurn) return;
-	actions[3]("{\"matchId\":" + matchId + ",\"playerId\":" + ticket1 + ",\"turn\":\"" + this.id +"\"}");
+	if(board[this.id[0]][this.id[1]]>9) return;
+	actions[3]("{\"matchId\":" + matchId + ",\"playerId\":" + ticketId + ",\"turn\":\"" + this.id +"\"}");
 	board.makeMoves([this.id],localPlayer);
 	refreshBoard();
 }
 
-function updateController (index) {
-	controller = controllers[index];
-};
 
-function updateFields (index){
-	var urlField = document.getElementById("url-field");
-	if(index == "1")
-		urlField.style.display = "block";
-	else urlField.style.display = "none";
-	serverController.updateURL(urlField.value);
-};
 
 function clientLog (text) {
 	var textArea = document.getElementById("log");
@@ -227,7 +211,6 @@ function refreshStatusBar (){
 }
 
 function play () {
-	if(!runningGame) 
 	clearInterval(runningGame);
 	runningGame = setInterval(waitLoop,intervalMilisecs);
 }
@@ -237,28 +220,22 @@ function stop () {
 }
 
 function reset (){
-	
+	stop();
+	board = [[1,2,3],[4,5,6],[7,8,9]]; 
+	ticketId = 0;
 }
 
 function waitLoop (){
-	if(!ticket1) actions[0]();
+	if(!ticketId) actions[0]();
 	else if (!matchId) actions[1]();
 	else if (!myTurn) actions[2]();
 	else if (!board.started) refreshStatusBar();
 }
 
-function nextActionResponse (){
-	actions[nextAction]
-	nextAction++;
-} 
-
-
-
 
 var boardView = document.getElementById("game-board");
 var control = document.getElementById("control");
 boardView.appendChild(board.gT());
-updateFields();
 refreshBoard();
 
 
@@ -266,14 +243,3 @@ refreshBoard();
 document.getElementById("controller-url").onchange = function(){serverController.updateURL(this.value);};
 document.getElementById("run-button").onclick = play;
 document.getElementById("stop-button").onclick = stop;
-var controllerSelect = document.getElementById("controller-select");
-controllerSelect.onfocus = function () { autoScroll = false};
-controllerSelect.onblur = function () { autoScroll = true};
-controllerSelect.onchange = function (){
-	updateFields(this.selectedIndex);
-	updateController(this.selectedIndex);
-};
-
-/*
-board.updateStatus();
-refreshStatusBar(document.getElementById("game-info"));*/

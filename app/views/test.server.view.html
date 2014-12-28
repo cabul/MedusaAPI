@@ -17,14 +17,8 @@
 	<legend>Control</legend>
 	<div id="control">
 		<ul id="control-list">
-			<li>Controller:
-				<select id="controller-select">
-					<option>Local</option>
-					<option>Server(online)</option>
-				</select>
-			</li>
-			<li id="url-field">URL:
-				<input id="controller-url" type=text>
+			<li id="url-field">Server URL:
+				<input id="controller-url" type=text placeholder="empty to use self">
 			</li>
 		</ul>
 		<input type="button" value="Run" id="run-button">
@@ -34,7 +28,7 @@
   </fieldset>
   <fieldset>
 	<legend>Activity</legend>
-	<textarea id="log" placeholder="activity" cols=50 rows=10 readonly></textarea>
+	<textarea id="log" cols=50 rows=10 readonly></textarea>
   </fieldset>
   <script type="text/javascript" src="./modules/core/controllers/test.js">
   </script>
